@@ -1,0 +1,61 @@
+[comment encoding = UTF-8 /]
+[module generateDiscreteHeaderFileExample('http://www.devs/1.0.0/adevs')]
+
+
+[template public generateDiscreteHeader(aDiscrete:Discrete)]
+[file (aDiscrete.name+'.h', false, 'UTF-8')]
+#include "ExchangeData.h"
+using namespace adevs;
+class [aDiscrete.name/] : public adevs::Atomic<IO_Type> {
+public:
+	[generatePort(aDiscrete)/]	
+	[generateAttributes(aDiscrete)/]	
+	list<ExchangeData> outEvents;
+public:
+	void delta_int();
+	void delta_ext(double e, const adevs::Bag<IO_Type>& xb);
+	void delta_conf(const adevs::Bag<IO_Type>& xb);
+	void output_func(adevs::Bag<IO_Type>& yb);
+	double ta();
+	void gc_output(adevs::Bag<IO_Type>& g);
+	[generateOperations(aDiscrete)/]
+	~[aDiscrete.name/]();
+};
+#endif
+[/file]
+[/template]
+[template public generateOperations(aDiscrete : Discrete) post (trim()) ]
+[for (aoperation : Operation | aDiscrete.operations) ]
+[generateOperation(aoperation)/] 
+[/for]
+[/template]
+
+[template public generateOperation(aoperation : Operation) post (trim()) ]
+[if (aoperation.returnType.oclIsUndefined()._not())][aoperation.returnType/] [/if]
+[aoperation.name/]([generateParameters(aoperation)/]);
+[/template]
+
+[template public generateParameters(aoperation : Operation) post (trim())]
+[for (attribute : Attribute | aoperation.parameters) separator (',')] [attribute.type/] [attribute.name/][/for]
+[/template]
+
+[template public generatePort(aDiscrete : Discrete) post (trim()) ]
+[for (port: FlowPort | aDiscrete.ports) ]
+static int [port.name/];
+[/for]
+[/template]
+[template public generateAttributes(aDiscrete : Discrete) post (trim()) ]
+[for (attribute: Attribute | aDiscrete.attributes) ]
+[if(attribute.isStatic)]static [/if][attribute.type/] [attribute.name/][if(attribute.multiplicity.toInteger().oclIsInvalid()._not())]
+['['/][attribute.multiplicity/][']'/];
+[else];
+[/if]
+[/for]
+[/template]
+[template public generateConstructor(aDiscrete : Discrete) post (trim()) ]
+[for (aoperation : Operation | aDiscrete.operations) ]
+	[if (aoperation.name.equalsIgnoreCase(aDiscrete.name))]
+[generateOperation(aoperation)/]
+	[/if]
+[/for]
+[/template]

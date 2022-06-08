@@ -1,0 +1,42 @@
+[comment encoding = UTF-8 /]
+[module generateExchangeData('http://www.devs/1.0.0/adevs')]
+
+
+[template public generateElementExchangeData(aSystem : System)]
+[file ('ExchangeData.h', false, 'UTF-8')]
+#pragma once
+#ifndef EXCHANGEDATA_H
+#define EXCHANGEDATA_H
+#include "adevs\include\adevs.h"
+#include "Vector.h"
+[for (astruct : Struct | aSystem.structs)]
+typedef struct [astruct.name/]{
+	[generateAttributes(astruct)/]
+}[astruct.name/];
+[/for]
+enum ModelType{
+[for (aDevs : Devs | aSystem.models)separator (',')]
+ [aDevs.name.toUpperCase()/][/for]
+};
+enum State{
+[for (aDevs : Devs | aSystem.models->asOrderedSet())separator (',')][if (aDevs.oclIsTypeOf(Hybrid))]
+[generateHybridStates(aDevs.oclAsType(Hybrid))/][/if][if (aDevs.oclIsTypeOf(Discrete))]
+[generateDiscreteStates(aDevs.oclAsType(Discrete))/][/if]
+[/for]
+};
+[/file]
+[/template]
+[template public generateAttributes(aStruct : Struct) post (trim()) ]
+[for (attribute: Attribute | aStruct.attributes) ]
+[if(attribute.isStatic)]static [/if][attribute.type/] [attribute.name/][if(attribute.multiplicity.toInteger().oclIsInvalid()._not())]
+['['/][attribute.multiplicity/][']'/];
+[else];
+[/if]
+[/for]
+[/template]
+[template public generateHybridStates(aAtomic : Hybrid) post (trim()) ]
+[for (aState : State | aAtomic.states)separator (',')][aState.name.toUpperCase()/][/for]
+[/template]
+[template public generateDiscreteStates(aAtomic : Discrete) post (trim()) ]
+[for (aState : State | aAtomic.states)separator (',')][aState.name.toUpperCase()/][/for]
+[/template]

@@ -1,0 +1,8 @@
+[comment encoding = UTF-8 /]
+[module generateDiscrete('http://www.devs/1.0.0/adevs')]
+[import org::eclipse::acceleo::devs::models::generateDiscreteCppFile/]
+[import org::eclipse::acceleo::devs::models::generateDiscreteHeaderFile/]
+[template public generateElementDiscrete(aDiscrete : Discrete)]
+[generateElementDiscreteHeaderFile(aDiscrete)/]
+[generateElementDiscreteCppFile(aDiscrete)/]
+[/template]

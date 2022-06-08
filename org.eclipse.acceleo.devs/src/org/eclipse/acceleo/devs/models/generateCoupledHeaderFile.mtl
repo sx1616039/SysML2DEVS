@@ -1,0 +1,67 @@
+[comment encoding = UTF-8 /]
+[module generateCoupledHeaderFile('http://www.devs/1.0.0/adevs')]
+
+
+[template public generateElementCoupledHeaderFile(aCoupled : Coupled)]
+[file (aCoupled.name+'.h', false, 'UTF-8')]
+#pragma once
+#ifndef [aCoupled.name.toUpperCase()/]_H
+#define [aCoupled.name.toUpperCase()/]_H
+#include "ExchangeData.h"
+#include "Vector.h"
+[for (aDevs : Devs | aCoupled.components)]
+#include "[aDevs.name/].h" 
+[/for]
+#include <iostream>
+using namespace std;
+using namespace adevs;
+class [aCoupled.name/] : public adevs::Digraph<ExchangeData*> {
+public:
+	[generatePort(aCoupled)/]
+	[generateComponents(aCoupled)/]
+public:
+	[generateConstructor(aCoupled)/]
+	~[aCoupled.name/]();
+};
+#endif
+[/file]
+[/template]
+[template public generateComponents(aCoupled : Coupled) post (trim()) ]
+[for (component : Devs | aCoupled.components) ]
+ 	[if (component.oclIsKindOf(Hybrid))]
+[component.name/] *m_[component.name.toLowerFirst()/][if (component.multiplicity.oclIsUndefined())];
+		[else]
+['['/][component.multiplicity/][']'/];
+		[/if]
+Hybrid<IO_Type> *m_hybrid_[component.name.toLowerFirst()/][if (component.multiplicity.oclIsUndefined())];
+		[else]
+['['/][component.multiplicity/][']'/];
+		[/if]
+	[else]
+[component.name/] *m_[component.name.toLowerFirst()/][if (component.multiplicity.oclIsUndefined())];
+		[else]
+['['/][component.multiplicity/][']'/];
+		[/if]
+	[/if]
+[/for]
+[/template]
+[template public generateConstructor(aCoupled : Coupled) post (trim()) ]
+[for (aoperation : Operation | aCoupled.operations) ]
+	[if (aoperation.name.equalsIgnoreCase(aCoupled.name))]
+[generateOperations(aoperation)/] 
+	[/if]
+[/for]
+[/template]
+[template public generateOperations(aoperation : Operation) post (trim()) ]
+[aoperation.name/]([generateParameters(aoperation)/]);
+[/template]
+
+[template public generateParameters(aoperation : Operation) post (trim())]
+[for (attribute : Parameter | aoperation.parameters) separator (',')] [attribute.type/] [attribute.name/][/for]
+[/template]
+
+[template public generatePort(aCoupled : Coupled) post (trim()) ]
+[for (port: FlowPort | aCoupled.ports) ]
+static int [port.name/];
+[/for]
+[/template]

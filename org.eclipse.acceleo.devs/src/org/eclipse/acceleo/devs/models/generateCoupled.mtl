@@ -1,0 +1,8 @@
+[comment encoding = UTF-8 /]
+[module generateCoupled('http://www.devs/1.0.0/adevs')]
+[import org::eclipse::acceleo::devs::models::generateCoupledHeaderFile /]
+[import org::eclipse::acceleo::devs::models::generateCoupledCppFile/]
+[template public generateElementCoupled(aCoupled : Coupled)]
+[generateElementCoupledHeaderFile(aCoupled)/]
+[generateElementCoupledCppFile(aCoupled)/]
+[/template]

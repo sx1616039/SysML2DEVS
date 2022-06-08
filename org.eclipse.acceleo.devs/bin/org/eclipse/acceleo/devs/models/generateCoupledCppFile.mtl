@@ -1,0 +1,12 @@
+[comment encoding = UTF-8 /]
+[module generateCoupledCppFile('http://www.devs/1.0.0/adevs')]
+
+
+[template public generateElementCoupledCppFile(aCoupled : Coupled)]
+
+[/template]
+
+[template public generateProperty(aAttribute : Attribute) post (trim()) ]
+[if (aAttribute.isStatic)]static [aAttribute.type/] [aAttribute.name/]['['/][aAttribute.multiplicity/][']'/];
+[/if]
+[/template]

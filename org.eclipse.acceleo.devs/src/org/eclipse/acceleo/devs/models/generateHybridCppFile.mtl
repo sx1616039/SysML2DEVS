@@ -1,0 +1,152 @@
+[comment encoding = UTF-8 /]
+[module generateHybridCppFile('http://www.devs/1.0.0/adevs')]
+
+
+[template public generateElementHybridCppFile(aHybrid : Hybrid)]
+[file (aHybrid.name+'.cpp', false, 'UTF-8')]
+#include "[aHybrid.name+'.h'/]"
+[generatePort(aHybrid)/]
+[generateConstructor(aHybrid)/]
+[generateInit(aHybrid)/]
+[generateDerFunc(aHybrid)/]
+[generateOutputFunction(aHybrid)/]
+[generateTimeEvent(aHybrid)/]
+[generateDeltaExt(aHybrid)/]
+[generateDeltaInt(aHybrid)/]
+[generateDeltaConf(aHybrid)/]
+
+[generateGcOutput(aHybrid)/]
+[/file]
+[/template]
+[template public generateConstructor(aHybrid : Hybrid) post (trim()) ]
+[for (aoperation : Operation | aHybrid.operations->asOrderedSet()) ]
+	[if (aoperation.name.equalsIgnoreCase(aHybrid.name))]
+[aoperation.name/]::[aoperation.name/]([generateParameters(aoperation)/]):ode_system<IOType>([aHybrid.equation.stateVars->size()*3/],0){
+	[aoperation._body/]
+}[/if]
+[/for]
+[/template]
+[template public generateInit(aHybrid : Hybrid) post (trim()) ]
+double [aHybrid.name+'::init(double* q){'/]
+	for (int i = 0; i < [aHybrid.equation.stateVars->size()*3/]; i++) {
+		q['['/]i[']'/] = 0;
+	}
+	q['['/][aHybrid.equation.stateVars->size()*3/][']'/] = m_curTime;
+}
+[/template]
+[template public generateDerFunc(aHybrid : Hybrid) post (trim()) ]
+double [aHybrid.name+'::der_func(const double* q, double* dq){'/]
+[for (attr:Attribute | aHybrid.equation.stateVars)]
+	[attr.type/] der_[attr.name/];
+	[attr.name/].x = q['['/][3*(i-1)/][']'/];
+	[attr.name/].y = q['['/][3*(i-1)+1/][']'/];
+	[attr.name/].z = q['['/][3*(i-1)+2/][']'/];
+[/for]
+	[aHybrid.equation._body/]
+[for (attr:Attribute | aHybrid.equation.stateVars)]
+	dq['['/][3*(i-1)/][']'/] = der_[attr.name/].x;
+	dq['['/][3*(i-1)+1/][']'/] = der_[attr.name/].y;
+	dq['['/][3*(i-1)+2/][']'/] = der_[attr.name/].z;
+[/for]
+}
+[/template]
+[template public generateDeltaInt(aHybrid : Hybrid) post (trim()) ]
+void [aHybrid.name+'::internal_event(double* q, const bool* state_event){'/]
+}
+[/template]
+[template public generateTimeEvent(aHybrid : Hybrid) post (trim()) ]
+void [aHybrid.name+'::time_event_func(const double* q){'/]
+m_curTime=START_TIME + elapse;
+[for (aInternalTransition : InternalTransition | aHybrid.internalTransitions) ]
+	if (m_state == [aInternalTransition.srcState.name/][if (aInternalTransition.guard.oclIsUndefined()._not())]
+ && [aInternalTransition.guard/][/if][if (aInternalTransition.triggerEvent.oclIsUndefined()._not() and aInternalTransition.triggerEvent.oclIsTypeOf(ChangeEvent))]
+[generateChangeEvent(aInternalTransition.triggerEvent.oclAsType(ChangeEvent))/][/if]){
+	[if (aInternalTransition.tarState.name.oclIsUndefined()._not())]m_state = [aInternalTransition.tarState.name/][/if]
+	[if (aInternalTransition.effect.oclIsUndefined()._not())][aInternalTransition.effect/][/if]}
+[/for]
+	return DBL_MAX;
+}
+[/template]
+[template public generateChangeEvent(aChangeEvent : ChangeEvent) post (trim()) ]
+  && [aChangeEvent.expression/]
+[/template]
+[template public generateDeltaExt(aHybrid : Hybrid) post (trim()) ]
+void [aHybrid.name+'::external_event(double* q, double e, const Bag<IO_Type>& xb){'/]	
+	Bag<IO_Type>::const_iterator i = xb.begin();
+	for (; i != xb.end(); i++){
+		ModelType tar = (*i).value->e_target;
+		ModelType src = (*i).value->e_src;
+		[for(aExternalTransition :ExternalTransition | aHybrid.externalTransitions)]
+		if ((tar == BROADCAST || tar == [aHybrid.name.toUpperCase()/]) && src == [aExternalTransition.inputEvent.srcModel.name.toUpperCase()/]){
+			[aExternalTransition.effect/]
+		}
+		[/for]
+	}
+}
+[/template]
+
+[template public generateGcOutput(aHybrid : Hybrid) post (trim()) ]
+double [aHybrid.name+'::gc_output(Bag<IO_Type>& g){'/]
+	Bag<IO_Type>::iterator i;
+	for (i = g.begin(); i != g.end(); i++)
+	{
+		delete (*i).value;
+	}
+}
+[/template]
+[template public generateOutputFunction(aHybrid : Hybrid) post (trim()) ]
+void [aHybrid.name+'::output_func(const double *q, const bool* state_event, Bag<IO_Type>& yb){'/]
+	while (!outEvents.empty()) {
+		ExchangeData data = outEvents.front();
+		ExchangeData *t = new ExchangeData();
+		t->e_req = data.e_req;
+		t->e_target = data.e_target;
+		t->e_src = data.e_src;
+		[if(aHybrid.outputFunc.oclIsUndefined()._not())]
+			[for(anEvent : SignalEvent | aHybrid.outputFunc.events->asOrderedSet())]
+		t->[anEvent.attribute.name/] = data.[anEvent.attribute.name/];
+			[/for]
+		[/if]
+		IO_Type y;
+		y.port = data.e_port;
+		y.value = t;
+		yb.insert(y);
+		outEvents.pop_front();
+	}
+}
+[/template]
+[template public generateDeltaConf(aHybrid : Hybrid) post (trim()) ]
+void [aHybrid.name+'::confluent_event(double* q, const bool* state_event,const Bag<IO_Type>& xb){'/]
+	internal_event(q, state_event);
+	external_event(q, 0.0, xb);
+}
+[/template]
+
+[template public generateOperation(aoperation : Operation) post (trim()) ]
+[if (aoperation.returnType.oclIsUndefined()._not())][aoperation.returnType/] [/if]
+[aoperation.name/]([generateParameters(aoperation)/]){
+	[aoperation._body/]
+}
+[/template]
+[template public generateOperations(aHybrid : Hybrid) post (trim()) ]
+[for (aoperation : Operation | aHybrid.operations) ]
+[generateOperation(aoperation)/] 
+[/for]
+[/template]
+[template public generateParameters(aoperation : Operation) post (trim())]
+[for (attribute : Parameter | aoperation.parameters) separator (',')] [attribute.type/] [attribute.name/][/for]
+[/template]
+
+[template public generatePort(aHybrid : Hybrid) post (trim()) ]
+[for (port: FlowPort | aHybrid.ports) ]
+int [aHybrid.name+'::'/][port.name/]=[i/];
+[/for]
+[/template]
+[template public generateAttributes(aHybrid : Hybrid) post (trim()) ]
+[for (attribute: Attribute | aHybrid.attributes) ]
+[if(attribute.isStatic)]static [/if][attribute.type/] [attribute.name/][if(attribute.multiplicity.toInteger().oclIsInvalid()._not())]
+['['/][attribute.multiplicity/][']'/];
+[else];
+[/if]
+[/for]
+[/template]

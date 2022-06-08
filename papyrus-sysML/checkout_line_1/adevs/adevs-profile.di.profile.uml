@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<uml:Profile xmi:version="20131001" xmlns:xmi="http://www.omg.org/spec/XMI/20131001" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:uml="http://www.eclipse.org/uml2/5.0.0/UML" xmi:id="_4xWEkP0-Eeum-fyHxaqpDA" name="adevs-profile" URI="http://org/model/adevs/adevs-profile">
+  <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_SJcpYP1MEeum-fyHxaqpDA" source="http://www.eclipse.org/uml2/2.0.0/UML">
+    <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_ugLOYP1MEeum-fyHxaqpDA" source="PapyrusVersion">
+      <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_ugLOYf1MEeum-fyHxaqpDA" key="Version" value="0.0.0"/>
+      <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_ugLOYv1MEeum-fyHxaqpDA" key="Comment" value="&lt;undefined>"/>
+      <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_ugLOY_1MEeum-fyHxaqpDA" key="Copyright" value=""/>
+      <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_ugLOZP1MEeum-fyHxaqpDA" key="Date" value=""/>
+      <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_ugLOZf1MEeum-fyHxaqpDA" key="Author" value="&lt;undefined>"/>
+    </eAnnotations>
+    <contents xmi:type="ecore:EPackage" xmi:id="_dqDzYP-dEeug_Of44qMw9Q" name="adevsprofile" nsURI="http://org/model/adevs/adevs-profile" nsPrefix="adevsprofile">
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_dqDzYf-dEeug_Of44qMw9Q" source="http://www.eclipse.org/uml2/2.0.0/UML">
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_dqDzYv-dEeug_Of44qMw9Q" key="originalName" value="adevs-profile"/>
+      </eAnnotations>
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_dqDzY_-dEeug_Of44qMw9Q" source="http://www.eclipse.org/uml2/4.1.0/UML">
+        <references xmi:type="ecore:EPackage" href="http://www.eclipse.org/papyrus/sysml/1.6/SysML#//blocks"/>
+      </eAnnotations>
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_dqEacf-dEeug_Of44qMw9Q" source="PapyrusVersion">
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_dqEacv-dEeug_Of44qMw9Q" key="Version" value="0.0.7"/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_dqEac_-dEeug_Of44qMw9Q" key="Comment" value=""/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_dqEadP-dEeug_Of44qMw9Q" key="Copyright" value=""/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_dqEadf-dEeug_Of44qMw9Q" key="Date" value="2021-08-18"/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_dqEadv-dEeug_Of44qMw9Q" key="Author" value=""/>
+      </eAnnotations>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_dqDzZP-dEeug_Of44qMw9Q" name="Atomic">
+        <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_dqDzZf-dEeug_Of44qMw9Q" source="http://www.eclipse.org/uml2/2.0.0/UML" references="_ugKAQP1MEeum-fyHxaqpDA"/>
+        <eSuperTypes xmi:type="ecore:EClass" href="http://www.eclipse.org/papyrus/sysml/1.6/SysML#//blocks/Block"/>
+      </eClassifiers>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_dqDzZ_-dEeug_Of44qMw9Q" name="Typedef">
+        <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_dqDzaP-dEeug_Of44qMw9Q" source="http://www.eclipse.org/uml2/2.0.0/UML" references="_BSFqgP-YEeug_Of44qMw9Q"/>
+        <eSuperTypes xmi:type="ecore:EClass" href="http://www.eclipse.org/papyrus/sysml/1.6/SysML#//blocks/ParticipantProperty"/>
+      </eClassifiers>
+    </contents>
+    <contents xmi:type="ecore:EPackage" xmi:id="_vSoCAP-cEeug_Of44qMw9Q" name="adevsprofile" nsURI="http://org/model/adevs/adevs-profile" nsPrefix="adevsprofile">
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_vSoCAf-cEeug_Of44qMw9Q" source="http://www.eclipse.org/uml2/2.0.0/UML">
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_vSoCAv-cEeug_Of44qMw9Q" key="originalName" value="adevs-profile"/>
+      </eAnnotations>
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_vSoCA_-cEeug_Of44qMw9Q" source="http://www.eclipse.org/uml2/4.1.0/UML">
+        <references xmi:type="ecore:EPackage" href="http://www.eclipse.org/papyrus/sysml/1.6/SysML#//blocks"/>
+      </eAnnotations>
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_vSopEf-cEeug_Of44qMw9Q" source="PapyrusVersion">
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_vSopEv-cEeug_Of44qMw9Q" key="Version" value="0.0.6"/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_vSopE_-cEeug_Of44qMw9Q" key="Comment" value=""/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_vSopFP-cEeug_Of44qMw9Q" key="Copyright" value=""/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_vSopFf-cEeug_Of44qMw9Q" key="Date" value="2021-08-18"/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_vSopFv-cEeug_Of44qMw9Q" key="Author" value=""/>
+      </eAnnotations>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_vSoCBP-cEeug_Of44qMw9Q" name="Atomic">
+        <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_vSoCBf-cEeug_Of44qMw9Q" source="http://www.eclipse.org/uml2/2.0.0/UML" references="_ugKAQP1MEeum-fyHxaqpDA"/>
+        <eSuperTypes xmi:type="ecore:EClass" href="http://www.eclipse.org/papyrus/sysml/1.6/SysML#//blocks/Block"/>
+      </eClassifiers>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_vSoCB_-cEeug_Of44qMw9Q" name="Typedef">
+        <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_vSoCCP-cEeug_Of44qMw9Q" source="http://www.eclipse.org/uml2/2.0.0/UML" references="_BSFqgP-YEeug_Of44qMw9Q"/>
+        <eSuperTypes xmi:type="ecore:EClass" href="http://www.eclipse.org/papyrus/sysml/1.6/SysML#//blocks/PropertySpecificType"/>
+      </eClassifiers>
+    </contents>
+    <contents xmi:type="ecore:EPackage" xmi:id="_F5WUEP-ZEeug_Of44qMw9Q" name="adevsprofile" nsURI="http://org/model/adevs/adevs-profile" nsPrefix="adevsprofile">
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_F5WUEf-ZEeug_Of44qMw9Q" source="http://www.eclipse.org/uml2/2.0.0/UML">
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_F5WUEv-ZEeug_Of44qMw9Q" key="originalName" value="adevs-profile"/>
+      </eAnnotations>
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_F5WUE_-ZEeug_Of44qMw9Q" source="http://www.eclipse.org/uml2/4.1.0/UML">
+        <references xmi:type="ecore:EPackage" href="http://www.eclipse.org/papyrus/sysml/1.6/SysML#//blocks"/>
+      </eAnnotations>
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_F5XiMP-ZEeug_Of44qMw9Q" source="PapyrusVersion">
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_F5XiMf-ZEeug_Of44qMw9Q" key="Version" value="0.0.5"/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_F5XiMv-ZEeug_Of44qMw9Q" key="Comment" value=""/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_F5XiM_-ZEeug_Of44qMw9Q" key="Copyright" value=""/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_F5XiNP-ZEeug_Of44qMw9Q" key="Date" value="2021-08-18"/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_F5XiNf-ZEeug_Of44qMw9Q" key="Author" value=""/>
+      </eAnnotations>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_F5WUFP-ZEeug_Of44qMw9Q" name="Atomic">
+        <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_F5WUFf-ZEeug_Of44qMw9Q" source="http://www.eclipse.org/uml2/2.0.0/UML" references="_ugKAQP1MEeum-fyHxaqpDA"/>
+        <eSuperTypes xmi:type="ecore:EClass" href="http://www.eclipse.org/papyrus/sysml/1.6/SysML#//blocks/Block"/>
+      </eClassifiers>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_F5WUF_-ZEeug_Of44qMw9Q" name="Typedef">
+        <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_F5WUGP-ZEeug_Of44qMw9Q" source="http://www.eclipse.org/uml2/2.0.0/UML" references="_BSFqgP-YEeug_Of44qMw9Q"/>
+        <eSuperTypes xmi:type="ecore:EClass" href="http://www.eclipse.org/papyrus/sysml/1.6/SysML#//blocks/Block"/>
+      </eClassifiers>
+    </contents>
+    <contents xmi:type="ecore:EPackage" xmi:id="_GKgokP4EEeuTopBSEIvyxw" name="adevsprofile" nsURI="http://org/model/adevs/adevs-profile" nsPrefix="adevsprofile">
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_GKgokf4EEeuTopBSEIvyxw" source="http://www.eclipse.org/uml2/2.0.0/UML">
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_GKgokv4EEeuTopBSEIvyxw" key="originalName" value="adevs-profile"/>
+      </eAnnotations>
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_GKgok_4EEeuTopBSEIvyxw" source="http://www.eclipse.org/uml2/4.1.0/UML">
+        <references xmi:type="ecore:EPackage" href="http://www.eclipse.org/papyrus/sysml/1.6/SysML#//blocks"/>
+      </eAnnotations>
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_GKh2sf4EEeuTopBSEIvyxw" source="PapyrusVersion">
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_GKh2sv4EEeuTopBSEIvyxw" key="Version" value="0.0.4"/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_GKh2s_4EEeuTopBSEIvyxw" key="Comment" value=""/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_GKh2tP4EEeuTopBSEIvyxw" key="Copyright" value=""/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_GKh2tf4EEeuTopBSEIvyxw" key="Date" value="2021-08-16"/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_GKh2tv4EEeuTopBSEIvyxw" key="Author" value="lixingchan"/>
+      </eAnnotations>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_GKgolP4EEeuTopBSEIvyxw" name="Atomic">
+        <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_GKgolf4EEeuTopBSEIvyxw" source="http://www.eclipse.org/uml2/2.0.0/UML" references="_ugKAQP1MEeum-fyHxaqpDA"/>
+        <eSuperTypes xmi:type="ecore:EClass" href="http://www.eclipse.org/papyrus/sysml/1.6/SysML#//blocks/Block"/>
+      </eClassifiers>
+    </contents>
+    <contents xmi:type="ecore:EPackage" xmi:id="_gE6MwP1OEeum-fyHxaqpDA" name="adevsprofile" nsURI="http://org/model/adevs/atomic" nsPrefix="adevsprofile">
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_gE6Mwf1OEeum-fyHxaqpDA" source="http://www.eclipse.org/uml2/2.0.0/UML">
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_gE6Mwv1OEeum-fyHxaqpDA" key="originalName" value="adevs-profile"/>
+      </eAnnotations>
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_gE6Mw_1OEeum-fyHxaqpDA" source="http://www.eclipse.org/uml2/4.1.0/UML">
+        <references xmi:type="ecore:EPackage" href="http://www.eclipse.org/papyrus/sysml/1.6/SysML#//blocks"/>
+      </eAnnotations>
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_gE6z0f1OEeum-fyHxaqpDA" source="PapyrusVersion">
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_gE6z0v1OEeum-fyHxaqpDA" key="Version" value="0.0.3"/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_gE6z0_1OEeum-fyHxaqpDA" key="Comment" value=""/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_gE6z1P1OEeum-fyHxaqpDA" key="Copyright" value=""/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_gE6z1f1OEeum-fyHxaqpDA" key="Date" value="2021-08-15"/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_gE6z1v1OEeum-fyHxaqpDA" key="Author" value="lixingchan "/>
+      </eAnnotations>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_gE6MxP1OEeum-fyHxaqpDA" name="Atomic">
+        <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_gE6Mxf1OEeum-fyHxaqpDA" source="http://www.eclipse.org/uml2/2.0.0/UML" references="_ugKAQP1MEeum-fyHxaqpDA"/>
+        <eSuperTypes xmi:type="ecore:EClass" href="http://www.eclipse.org/papyrus/sysml/1.6/SysML#//blocks/Block"/>
+      </eClassifiers>
+    </contents>
+    <contents xmi:type="ecore:EPackage" xmi:id="_yHmBAf1MEeum-fyHxaqpDA" name="adevsprofile" nsURI="http:///schemas/adevsprofile/_yHmBAP1MEeum-fyHxaqpDA/1" nsPrefix="adevsprofile">
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_yHmBAv1MEeum-fyHxaqpDA" source="http://www.eclipse.org/uml2/2.0.0/UML">
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_yHmBA_1MEeum-fyHxaqpDA" key="originalName" value="adevs-profile"/>
+      </eAnnotations>
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_yHmBBP1MEeum-fyHxaqpDA" source="http://www.eclipse.org/uml2/4.1.0/UML">
+        <references xmi:type="ecore:EPackage" href="http://www.eclipse.org/papyrus/sysml/1.6/SysML#//blocks"/>
+      </eAnnotations>
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_yHnPIP1MEeum-fyHxaqpDA" source="PapyrusVersion">
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_yHnPIf1MEeum-fyHxaqpDA" key="Version" value="0.0.2"/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_yHnPIv1MEeum-fyHxaqpDA" key="Comment" value=""/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_yHnPI_1MEeum-fyHxaqpDA" key="Copyright" value=""/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_yHnPJP1MEeum-fyHxaqpDA" key="Date" value="2021-08-15"/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_yHnPJf1MEeum-fyHxaqpDA" key="Author" value="lixingchan"/>
+      </eAnnotations>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_yHmBBf1MEeum-fyHxaqpDA" name="Atomic">
+        <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_yHmBBv1MEeum-fyHxaqpDA" source="http://www.eclipse.org/uml2/2.0.0/UML" references="_ugKAQP1MEeum-fyHxaqpDA"/>
+        <eSuperTypes xmi:type="ecore:EClass" href="http://www.eclipse.org/papyrus/sysml/1.6/SysML#//blocks/Block"/>
+      </eClassifiers>
+    </contents>
+    <contents xmi:type="ecore:EPackage" xmi:id="_SJdQcP1MEeum-fyHxaqpDA" name="adevsprofile" nsURI="http:///schemas/adevsprofile/_SJXw4P1MEeum-fyHxaqpDA/0" nsPrefix="adevsprofile">
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_SJdQcf1MEeum-fyHxaqpDA" source="http://www.eclipse.org/uml2/2.0.0/UML">
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_SJdQcv1MEeum-fyHxaqpDA" key="originalName" value="adevs-profile"/>
+      </eAnnotations>
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_SJdQc_1MEeum-fyHxaqpDA" source="http://www.eclipse.org/uml2/4.1.0/UML">
+        <references xmi:type="ecore:EPackage" href="http://www.eclipse.org/papyrus/sysml/1.6/SysML#//blocks"/>
+      </eAnnotations>
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_SJeekP1MEeum-fyHxaqpDA" source="PapyrusVersion">
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_SJeekf1MEeum-fyHxaqpDA" key="Version" value="0.0.1"/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_SJeekv1MEeum-fyHxaqpDA" key="Comment" value=""/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_SJeek_1MEeum-fyHxaqpDA" key="Copyright" value=""/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_SJeelP1MEeum-fyHxaqpDA" key="Date" value="2021-08-15"/>
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_SJeelf1MEeum-fyHxaqpDA" key="Author" value="lixingchan"/>
+      </eAnnotations>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_SJdQdP1MEeum-fyHxaqpDA" name="Atomic">
+        <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_SJdQdf1MEeum-fyHxaqpDA" source="http://www.eclipse.org/uml2/2.0.0/UML"/>
+        <eSuperTypes xmi:type="ecore:EClass" href="http://www.eclipse.org/papyrus/sysml/1.6/SysML#//blocks/Block"/>
+      </eClassifiers>
+    </contents>
+  </eAnnotations>
+  <packageImport xmi:type="uml:PackageImport" xmi:id="_47yaAP0-Eeum-fyHxaqpDA">
+    <importedPackage xmi:type="uml:Model" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#_0"/>
+  </packageImport>
+  <packageImport xmi:type="uml:PackageImport" xmi:id="_47zBEP0-Eeum-fyHxaqpDA">
+    <importedPackage xmi:type="uml:Model" href="pathmap://UML_METAMODELS/UML.metamodel.uml#_0"/>
+  </packageImport>
+  <packageImport xmi:type="uml:PackageImport" xmi:id="_J9eGcP1MEeum-fyHxaqpDA">
+    <importedPackage xmi:type="uml:Profile" href="pathmap://SysML16_PROFILES/SysML.profile.uml#SysML.package_packagedElement_Blocks"/>
+  </packageImport>
+  <packagedElement xmi:type="uml:Stereotype" xmi:id="_ugKAQP1MEeum-fyHxaqpDA" name="Atomic">
+    <generalization xmi:type="uml:Generalization" xmi:id="_QXC3oP1MEeum-fyHxaqpDA">
+      <general xmi:type="uml:Stereotype" href="pathmap://SysML16_PROFILES/SysML.profile.uml#SysML.package_packagedElement_Blocks.stereotype_packagedElement_Block"/>
+    </generalization>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Stereotype" xmi:id="_BSFqgP-YEeug_Of44qMw9Q" name="Typedef">
+    <generalization xmi:type="uml:Generalization" xmi:id="_B-V3EP-ZEeug_Of44qMw9Q">
+      <general xmi:type="uml:Stereotype" href="pathmap://SysML16_PROFILES/SysML.profile.uml#SysML.package_packagedElement_Blocks.stereotype_packagedElement_ParticipantProperty"/>
+    </generalization>
+  </packagedElement>
+</uml:Profile>

@@ -1,0 +1,123 @@
+[comment encoding = UTF-8 /]
+[module generateDiscreteCppFile('http://www.devs/1.0.0/adevs')]
+
+
+[template public generateElementDiscreteCppFile(aDiscrete : Discrete)]
+[file (aDiscrete.name+'.cpp', false, 'UTF-8')]
+#include "[aDiscrete.name+'.h'/]"
+[generatePort(aDiscrete)/]
+[generateConstructor(aDiscrete)/]
+[generateOutputFunction(aDiscrete)/]
+[generateDeltaExt(aDiscrete)/]
+[generateDeltaInt(aDiscrete)/]
+[generateDeltaConf(aDiscrete)/]
+[generateTa(aDiscrete)/]
+[generateGcOutput(aDiscrete)/]
+[/file]
+[/template]
+
+[template public generateConstructor(aDiscrete : Discrete) post (trim()) ]
+[for (aoperation : Operation | aDiscrete.operations->asOrderedSet()) ]
+	[if (aoperation.name.equalsIgnoreCase(aDiscrete.name))]
+[aoperation.name/]::[generateOperation(aoperation)/]
+	[/if]
+[/for]
+[/template]
+[template public generateDeltaInt(aDiscrete : Discrete) post (trim()) ]
+void [aDiscrete.name+'::delta_int(){'/]
+[for (aInternalTransition : InternalTransition | aDiscrete.internalTransitions) ]
+	if (m_state == [aInternalTransition.srcState.name/][if (aInternalTransition.guard.oclIsUndefined()._not())]
+ && [aInternalTransition.guard/][/if][if (aInternalTransition.triggerEvent.oclIsUndefined()._not() and aInternalTransition.triggerEvent.oclIsTypeOf(ChangeEvent))]
+[generateChangeEvent(aInternalTransition.triggerEvent.oclAsType(ChangeEvent))/][/if]){
+	[if (aInternalTransition.tarState.name.oclIsUndefined()._not())]m_state = [aInternalTransition.tarState.name/][/if]
+	[if (aInternalTransition.effect.oclIsUndefined()._not())][aInternalTransition.effect/][/if]}
+[/for]
+}
+[/template]
+[template public generateChangeEvent(aChangeEvent : ChangeEvent) post (trim()) ]
+  && [aChangeEvent.expression/]
+[/template]
+[template public generateDeltaExt(aDiscrete : Discrete) post (trim()) ]
+void [aDiscrete.name+'::delta_ext(double e, const Bag<IO_Type>& xb){'/]	
+	Bag<IO_Type>::const_iterator i = xb.begin();
+	for (; i != xb.end(); i++){
+		ModelType tar = (*i).value->e_target;
+		ModelType src = (*i).value->e_src;
+		[for(aExternalTransition :ExternalTransition | aDiscrete.externalTransitions)]
+		if ((tar == BROADCAST || tar == [aDiscrete.name.toUpperCase()/]) && src == [aExternalTransition.inputEvent.srcModel.name.toUpperCase()/]){
+			[aExternalTransition.effect/]
+		}
+		[/for]
+	}
+[/template]
+[template public generateTa(aDiscrete : Discrete) post (trim()) ]
+double [aDiscrete.name+'::ta(){'/]
+	m_curTime = START_TIME + elapse;
+	return TIME_STEP;
+}
+[/template]
+[template public generateGcOutput(aDiscrete : Discrete) post (trim()) ]
+double [aDiscrete.name+'::gc_output(Bag<IO_Type>& g){'/]
+	Bag<IO_Type>::iterator i;
+	for (i = g.begin(); i != g.end(); i++)
+	{
+		delete (*i).value;
+	}
+}
+[/template]
+[template public generateOutputFunction(aDiscrete : Discrete) post (trim()) ]
+void [aDiscrete.name+'::output_func(Bag<IO_Type>& yb){'/]
+	while (!outEvents.empty()) {
+		ExchangeData data = outEvents.front();
+		ExchangeData *t = new ExchangeData();
+		t->e_req = data.e_req;
+		t->e_target = data.e_target;
+		t->e_src = data.e_src;
+		[if(aDiscrete.outputFunc.oclIsUndefined()._not())]
+			[for(anEvent : SignalEvent | aDiscrete.outputFunc.events->asOrderedSet())]
+		t->[anEvent.attribute.name/] = data.[anEvent.attribute.name/];
+			[/for]
+		[/if]
+		IO_Type y;
+		y.port = data.e_port;
+		y.value = t;
+		yb.insert(y);
+		outEvents.pop_front();
+	}
+}
+[/template]
+[template public generateDeltaConf(aDiscrete : Discrete) post (trim()) ]
+void [aDiscrete.name+'::delta_conf(const Bag<IO_Type>& xb){'/]
+	delta_int();
+	delta_ext(0.0, xb);
+}
+[/template]
+
+[template public generateOperation(aoperation : Operation) post (trim()) ]
+[if (aoperation.returnType.oclIsUndefined()._not())][aoperation.returnType/] [/if]
+[aoperation.name/]([generateParameters(aoperation)/]){
+	[aoperation._body/]
+}
+[/template]
+[template public generateOperations(aDiscrete : Discrete) post (trim()) ]
+[for (aoperation : Operation | aDiscrete.operations) ]
+[generateOperation(aoperation)/] 
+[/for]
+[/template]
+[template public generateParameters(aoperation : Operation) post (trim())]
+[for (attribute : Parameter | aoperation.parameters) separator (',')] [attribute.type/] [attribute.name/][/for]
+[/template]
+
+[template public generatePort(aDiscrete : Discrete) post (trim()) ]
+[for (port: FlowPort | aDiscrete.ports) ]
+int [aDiscrete.name+'::'/][port.name/]=[i/];
+[/for]
+[/template]
+[template public generateAttributes(aDiscrete : Discrete) post (trim()) ]
+[for (attribute: Attribute | aDiscrete.attributes) ]
+[if(attribute.isStatic)]static [/if][attribute.type/] [attribute.name/][if(attribute.multiplicity.toInteger().oclIsInvalid()._not())]
+['['/][attribute.multiplicity/][']'/];
+[else];
+[/if]
+[/for]
+[/template]

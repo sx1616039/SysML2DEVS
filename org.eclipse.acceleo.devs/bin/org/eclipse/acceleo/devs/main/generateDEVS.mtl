@@ -1,0 +1,31 @@
+[comment encoding = UTF-8 /]
+[**
+ * The documentation of the module generateDEVS.
+ */]
+[module generateDEVS('http://www.devs/1.0.0/adevs')]
+[import org::eclipse::acceleo::devs::models::generateCoupled /]
+[import org::eclipse::acceleo::devs::models::generateDiscrete/]
+[import org::eclipse::acceleo::devs::models::generateHybrid/]
+[import org::eclipse::acceleo::devs::global::generateExchangeData/]
+[**
+ * The documentation of the template generateElement.
+ * @param aClass
+ */]
+[template public generateElement(aSystem : System)]
+[comment @main/]
+[generateElementExchangeData(aSystem)/]
+[for (aDevs : Devs | aSystem.models->asOrderedSet())]
+	[if (aDevs.oclIsTypeOf(Coupled))]
+		[generateElementCoupled(aDevs.oclAsType(Coupled))/]
+	[/if]
+	[if (aDevs.oclIsTypeOf(Discrete))]
+		[generateElementDiscrete(aDevs.oclAsType(Discrete))/]
+	[/if]
+	[if (aDevs.oclIsTypeOf(Hybrid))]
+		[generateElementHybrid(aDevs.oclAsType(Hybrid))/]
+	[/if]	
+	
+[/for]
+[/template]
+
+

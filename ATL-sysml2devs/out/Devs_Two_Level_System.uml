@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<adevs:System xmi:version="20131001" xmlns:xmi="http://www.omg.org/spec/XMI/20131001" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:adevs="http://www.devs/1.0.0/adevs" xsi:schemaLocation="http://www.devs/1.0.0/adevs ../metamodel/target/adevs.ecore" xmi:id="_OwSpEFNrEeyxW60CFQm-vw" name="Two_Level_System">
+  <models xmi:type="adevs:Coupled" xmi:id="_OwSpEVNrEeyxW60CFQm-vw" name="Agent" components="_OwSpOVNrEeyxW60CFQm-vw _OwSpG1NrEeyxW60CFQm-vw _OwSpTVNrEeyxW60CFQm-vw">
+    <ports xmi:id="_OwSpElNrEeyxW60CFQm-vw" name="inTarget" type="TarInfo" owner="_OwSpEVNrEeyxW60CFQm-vw"/>
+    <ports xmi:id="_OwSpE1NrEeyxW60CFQm-vw" name="outDestroy" type="DestroyInfo" direction="out" owner="_OwSpEVNrEeyxW60CFQm-vw"/>
+    <connectors xmi:id="_OwSpFFNrEeyxW60CFQm-vw" srcObjectName="this" tarObjectName="radar" srcClassName="Agent" tarClassName="Radar" srcPort="_OwSpElNrEeyxW60CFQm-vw" tarPort="_OwSpOlNrEeyxW60CFQm-vw"/>
+    <connectors xmi:id="_OwSpFVNrEeyxW60CFQm-vw" srcObjectName="this" tarObjectName="missle" srcClassName="Agent" tarClassName="Missile" srcPort="_OwSpElNrEeyxW60CFQm-vw" tarPort="_OwSpHFNrEeyxW60CFQm-vw"/>
+    <connectors xmi:id="_OwSpFlNrEeyxW60CFQm-vw" srcObjectName="controller" tarObjectName="radar" srcClassName="Controller" tarClassName="Radar" srcPort="_OwSpT1NrEeyxW60CFQm-vw" tarPort="_OwSpPFNrEeyxW60CFQm-vw"/>
+    <connectors xmi:id="_OwSpF1NrEeyxW60CFQm-vw" srcObjectName="radar" tarObjectName="controller" srcClassName="Radar" tarClassName="Controller" srcPort="_OwSpO1NrEeyxW60CFQm-vw" tarPort="_OwSpTlNrEeyxW60CFQm-vw"/>
+    <connectors xmi:id="_OwSpGFNrEeyxW60CFQm-vw" srcObjectName="controller" tarObjectName="missle" srcClassName="Controller" tarClassName="Missile" srcPort="_OwSpUFNrEeyxW60CFQm-vw" tarPort="_OwSpHVNrEeyxW60CFQm-vw"/>
+    <connectors xmi:id="_OwSpGVNrEeyxW60CFQm-vw" srcObjectName="missle" tarObjectName="controller" srcClassName="Missile" tarClassName="Controller" srcPort="_OwSpHlNrEeyxW60CFQm-vw" tarPort="_OwSpUVNrEeyxW60CFQm-vw"/>
+    <connectors xmi:id="_OwSpGlNrEeyxW60CFQm-vw" srcObjectName="missle" tarObjectName="this" srcClassName="Missile" tarClassName="Agent" srcPort="_OwSpHlNrEeyxW60CFQm-vw" tarPort="_OwSpE1NrEeyxW60CFQm-vw"/>
+  </models>
+  <models xmi:type="adevs:Hybrid" xmi:id="_OwSpG1NrEeyxW60CFQm-vw" name="Missile">
+    <ports xmi:id="_OwSpHFNrEeyxW60CFQm-vw" name="inTarget" type="TarInfo" owner="_OwSpG1NrEeyxW60CFQm-vw"/>
+    <ports xmi:id="_OwSpHVNrEeyxW60CFQm-vw" name="inLnchlnfo" type="LnchInfo" owner="_OwSpG1NrEeyxW60CFQm-vw"/>
+    <ports xmi:id="_OwSpHlNrEeyxW60CFQm-vw" name="outDestroy" type="DestroyInfo" direction="out" owner="_OwSpG1NrEeyxW60CFQm-vw"/>
+    <operations xmi:id="_OwSpH1NrEeyxW60CFQm-vw" name="calculateAcc" returnType="CVector">
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpIFNrEeyxW60CFQm-vw" name="curPosition" type="CVector"/>
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpIVNrEeyxW60CFQm-vw" name="curVel" type="CVector"/>
+    </operations>
+    <operations xmi:id="_OwSpIlNrEeyxW60CFQm-vw" name="Missile">
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpI1NrEeyxW60CFQm-vw" name="id" type="int"/>
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpJFNrEeyxW60CFQm-vw" name="type" type="int"/>
+    </operations>
+    <operations xmi:id="_OwSpJVNrEeyxW60CFQm-vw" name="inputLncInfo"/>
+    <operations xmi:id="_OwSpJlNrEeyxW60CFQm-vw" name="setToEnd"/>
+    <operations xmi:id="_OwSpJ1NrEeyxW60CFQm-vw" name="outDestroy"/>
+    <operations xmi:id="_OwSpKFNrEeyxW60CFQm-vw" name="getTargetInfo"/>
+    <attributes xmi:id="_OwSpKVNrEeyxW60CFQm-vw" name="equation" type="MisEquition"/>
+    <attributes xmi:id="_OwSpKlNrEeyxW60CFQm-vw" name="m_curPos" type="CVector"/>
+    <attributes xmi:id="_OwSpK1NrEeyxW60CFQm-vw" name="m_curVel" type="CVector"/>
+    <attributes xmi:id="_OwSpLFNrEeyxW60CFQm-vw" name="m_id" type="int"/>
+    <attributes xmi:id="_OwSpLVNrEeyxW60CFQm-vw" name="m_lnchTime" type="double"/>
+    <attributes xmi:id="_OwSpLlNrEeyxW60CFQm-vw" name="m_maxFlyTime" type="double"/>
+    <attributes xmi:id="_OwSpL1NrEeyxW60CFQm-vw" name="m_tarPos" type="CVector"/>
+    <attributes xmi:id="_OwSpMFNrEeyxW60CFQm-vw" name="m_lnchPos" type="CVector"/>
+    <attributes xmi:id="_OwSpMVNrEeyxW60CFQm-vw" name="m_lastDist" type="double"/>
+    <attributes xmi:id="_OwSpMlNrEeyxW60CFQm-vw" name="m_curTime" type="double"/>
+    <attributes xmi:id="_OwSpM1NrEeyxW60CFQm-vw" name="m_acc" type="CVector"/>
+    <attributes xmi:id="_OwSpNFNrEeyxW60CFQm-vw" name="inTarget" type="TarInfo"/>
+    <attributes xmi:id="_OwSpNVNrEeyxW60CFQm-vw" name="inLnchlnfo" type="LnchInfo"/>
+    <attributes xmi:id="_OwSpNlNrEeyxW60CFQm-vw" name="outDestroy" type="DestroyInfo"/>
+    <outputFunc xmi:id="_OwSpN1NrEeyxW60CFQm-vw" events="_OwSpmVNrEeyxW60CFQm-vw"/>
+    <equation xmi:id="_OwSpOFNrEeyxW60CFQm-vw" name="equation" body="der(m_curVel)=m_acc;der(m_curPos)=attt;" stateVars="_OwSpKlNrEeyxW60CFQm-vw _OwSpK1NrEeyxW60CFQm-vw _OwSpM1NrEeyxW60CFQm-vw"/>
+  </models>
+  <models xmi:type="adevs:Discrete" xmi:id="_OwSpOVNrEeyxW60CFQm-vw" name="Radar">
+    <ports xmi:id="_OwSpOlNrEeyxW60CFQm-vw" name="inTarget" type="TarInfo" owner="_OwSpOVNrEeyxW60CFQm-vw"/>
+    <ports xmi:id="_OwSpO1NrEeyxW60CFQm-vw" name="outRadar" type="RadarInfo" direction="out" owner="_OwSpOVNrEeyxW60CFQm-vw"/>
+    <ports xmi:id="_OwSpPFNrEeyxW60CFQm-vw" name="inStartRadar" type="StartRadarInfo" owner="_OwSpOVNrEeyxW60CFQm-vw"/>
+    <operations xmi:id="_OwSpPVNrEeyxW60CFQm-vw" name="scanning" returnType="void">
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpPlNrEeyxW60CFQm-vw" name="target" type="TarInfo"/>
+    </operations>
+    <operations xmi:id="_OwSpP1NrEeyxW60CFQm-vw" name="Radar">
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpQFNrEeyxW60CFQm-vw" name="id" type="int"/>
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpQVNrEeyxW60CFQm-vw" name="pos" type="CVector"/>
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpQlNrEeyxW60CFQm-vw" name="type" type="int"/>
+    </operations>
+    <operations xmi:id="_OwSpQ1NrEeyxW60CFQm-vw" name="startRadar"/>
+    <operations xmi:id="_OwSpRFNrEeyxW60CFQm-vw" name="scanTarget"/>
+    <attributes xmi:id="_OwSpRVNrEeyxW60CFQm-vw" name="m_id" type="Integer" isStatic="true"/>
+    <attributes xmi:id="_OwSpRlNrEeyxW60CFQm-vw" name="m_tarId" type="Integer"/>
+    <attributes xmi:id="_OwSpR1NrEeyxW60CFQm-vw" name="m_radarPos" type="CVector"/>
+    <attributes xmi:id="_OwSpSFNrEeyxW60CFQm-vw" name="m_radius" type="double"/>
+    <attributes xmi:id="_OwSpSVNrEeyxW60CFQm-vw" name="m_angle" type="double"/>
+    <attributes xmi:id="_OwSpSlNrEeyxW60CFQm-vw" name="m_isInView" type="bool" multiplicity="5"/>
+    <attributes xmi:id="_OwSpS1NrEeyxW60CFQm-vw" name="m_targets" type="List&lt;TarInfo>"/>
+    <attributes xmi:id="_OwSpTFNrEeyxW60CFQm-vw" name="m_curTime" type="double"/>
+  </models>
+  <models xmi:type="adevs:Discrete" xmi:id="_OwSpTVNrEeyxW60CFQm-vw" name="Controller">
+    <ports xmi:id="_OwSpTlNrEeyxW60CFQm-vw" name="inRadar" type="RadarInfo" owner="_OwSpTVNrEeyxW60CFQm-vw"/>
+    <ports xmi:id="_OwSpT1NrEeyxW60CFQm-vw" name="outStartRadar" type="StartRadarInfo" direction="out" owner="_OwSpTVNrEeyxW60CFQm-vw"/>
+    <ports xmi:id="_OwSpUFNrEeyxW60CFQm-vw" name="outLnchlnfo" type="LnchInfo" direction="out" owner="_OwSpTVNrEeyxW60CFQm-vw"/>
+    <ports xmi:id="_OwSpUVNrEeyxW60CFQm-vw" name="inDestroy" type="DestroyInfo" owner="_OwSpTVNrEeyxW60CFQm-vw"/>
+    <operations xmi:id="_OwSpUlNrEeyxW60CFQm-vw" name="Kepler2" returnType="void" body="123123">
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpU1NrEeyxW60CFQm-vw" name="*curPos" type="CVector"/>
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpVFNrEeyxW60CFQm-vw" name="*curVel" type="CVector"/>
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpVVNrEeyxW60CFQm-vw" name="launchPos" type="CVector"/>
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpVlNrEeyxW60CFQm-vw" name="launchVel" type="CVector"/>
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpV1NrEeyxW60CFQm-vw" name="flyTime" type="double"/>
+    </operations>
+    <operations xmi:id="_OwSpWFNrEeyxW60CFQm-vw" name="threatEvaluate" returnType="double">
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpWVNrEeyxW60CFQm-vw" name="v" type="double"/>
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpWlNrEeyxW60CFQm-vw" name="leftTime" type="double"/>
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpW1NrEeyxW60CFQm-vw" name="fallSite" type="CVector"/>
+    </operations>
+    <operations xmi:id="_OwSpXFNrEeyxW60CFQm-vw" name="findMaxThreat" returnType="double">
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpXVNrEeyxW60CFQm-vw" name="*id" type="int"/>
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpXlNrEeyxW60CFQm-vw" name="*tarId" type="int"/>
+    </operations>
+    <operations xmi:id="_OwSpX1NrEeyxW60CFQm-vw" name="interceptPlanning">
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpYFNrEeyxW60CFQm-vw" name="tarLnchPos" type="CVector"/>
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpYVNrEeyxW60CFQm-vw" name="tarLnchVel" type="CVector"/>
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpYlNrEeyxW60CFQm-vw" name="lnchTime" type="double"/>
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpY1NrEeyxW60CFQm-vw" name="totalTime" type="double"/>
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpZFNrEeyxW60CFQm-vw" type="double"/>
+    </operations>
+    <operations xmi:id="_OwSpZVNrEeyxW60CFQm-vw" name="assignTarget" returnType="void"/>
+    <operations xmi:id="_OwSpZlNrEeyxW60CFQm-vw" name="Controller">
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpZ1NrEeyxW60CFQm-vw" name="id" type="int"/>
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpaFNrEeyxW60CFQm-vw" name="pos" type="CVector"/>
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpaVNrEeyxW60CFQm-vw" name="type" type="int"/>
+      <parameters xmi:type="adevs:Parameter" xmi:id="_OwSpalNrEeyxW60CFQm-vw" name="radius" type="double"/>
+    </operations>
+    <operations xmi:id="_OwSpa1NrEeyxW60CFQm-vw" name="processing"/>
+    <operations xmi:id="_OwSpbFNrEeyxW60CFQm-vw" name="setDestroy"/>
+    <attributes xmi:id="_OwSpbVNrEeyxW60CFQm-vw" name="m_threatIndex" type="double" multiplicity="35"/>
+    <attributes xmi:id="_OwSpblNrEeyxW60CFQm-vw" name="m_lockedTarget" type="bool" multiplicity="35"/>
+    <attributes xmi:id="_OwSpb1NrEeyxW60CFQm-vw" name="m_id" type="int"/>
+    <attributes xmi:id="_OwSpcFNrEeyxW60CFQm-vw" name="m_pos" type="CVector"/>
+    <attributes xmi:id="_OwSpcVNrEeyxW60CFQm-vw" name="m_centerPos" type="CVector"/>
+    <attributes xmi:id="_OwSpclNrEeyxW60CFQm-vw" name="m_curTime" type="double"/>
+    <attributes xmi:id="_OwSpc1NrEeyxW60CFQm-vw" name="m_radius" type="double"/>
+    <attributes xmi:id="_OwSpdFNrEeyxW60CFQm-vw" name="m_type" type="int"/>
+    <attributes xmi:id="_OwSpdVNrEeyxW60CFQm-vw" name="m_tars" type="TarInfo" multiplicity="5"/>
+    <attributes xmi:id="_OwSpdlNrEeyxW60CFQm-vw" name="m_misAvrgVel" type="double"/>
+    <states xmi:id="_OwSpd1NrEeyxW60CFQm-vw" name="WAITING"/>
+    <states xmi:id="_OwSpeFNrEeyxW60CFQm-vw" name="PROCESSING"/>
+    <states xmi:id="_OwSpeVNrEeyxW60CFQm-vw" name="HITTED"/>
+    <internalTransitions xmi:id="_OwSpelNrEeyxW60CFQm-vw" name="wait" srcState="_OwSpd1NrEeyxW60CFQm-vw" tarState="_OwSpd1NrEeyxW60CFQm-vw" effect="time = 0;&#xA;time = 1;"/>
+    <internalTransitions xmi:id="_OwSpe1NrEeyxW60CFQm-vw" srcState="_OwSpd1NrEeyxW60CFQm-vw" tarState="_OwSpeFNrEeyxW60CFQm-vw" effect="processingBody" guard="a>c">
+      <triggerEvent xmi:type="adevs:ChangeEvent" xmi:id="_OwSpfFNrEeyxW60CFQm-vw" name="ce1" expression="aa>b"/>
+    </internalTransitions>
+    <externalTransitions xmi:id="_OwSpfVNrEeyxW60CFQm-vw" srcState="_OwSpd1NrEeyxW60CFQm-vw" tarState="_OwSpeVNrEeyxW60CFQm-vw" effect="setDestroyBody" inputEvent="_OwSpmVNrEeyxW60CFQm-vw"/>
+  </models>
+  <structs xmi:id="_OwSpflNrEeyxW60CFQm-vw" name="StartRadarInfo">
+    <attributes xmi:id="_OwSpf1NrEeyxW60CFQm-vw" name="isStart" type="bool"/>
+  </structs>
+  <structs xmi:id="_OwSpgFNrEeyxW60CFQm-vw" name="LnchInfo">
+    <attributes xmi:id="_OwSpgVNrEeyxW60CFQm-vw" name="l_InchTime" type="double"/>
+    <attributes xmi:id="_OwSpglNrEeyxW60CFQm-vw" name="l_misId" type="int"/>
+    <attributes xmi:id="_OwSpg1NrEeyxW60CFQm-vw" name="l_tarId" type="int"/>
+    <attributes xmi:id="_OwSphFNrEeyxW60CFQm-vw" name="l_lnchPos" type="CVector"/>
+    <attributes xmi:id="_OwSphVNrEeyxW60CFQm-vw" name="l_lnchVel" type="CVector"/>
+    <attributes xmi:id="_OwSphlNrEeyxW60CFQm-vw" name="l_tarPos" type="CVector"/>
+    <attributes xmi:id="_OwSph1NrEeyxW60CFQm-vw" name="l_tarVel" type="CVector"/>
+    <attributes xmi:id="_OwSpiFNrEeyxW60CFQm-vw" name="l_curTime" type="double"/>
+  </structs>
+  <structs xmi:id="_OwSpiVNrEeyxW60CFQm-vw" name="TarInfo">
+    <attributes xmi:id="_OwSpilNrEeyxW60CFQm-vw" name="t_id" type="int"/>
+    <attributes xmi:id="_OwSpi1NrEeyxW60CFQm-vw" name="t_InchTime" type="double"/>
+    <attributes xmi:id="_OwSpjFNrEeyxW60CFQm-vw" name="t_Pos" type="CVector"/>
+    <attributes xmi:id="_OwSpjVNrEeyxW60CFQm-vw" name="t_totalTime" type="double"/>
+    <attributes xmi:id="_OwSpjlNrEeyxW60CFQm-vw" name="t_Vel" type="CVector"/>
+    <attributes xmi:id="_OwSpj1NrEeyxW60CFQm-vw" name="t_InchVel" type="CVector"/>
+    <attributes xmi:id="_OwSpkFNrEeyxW60CFQm-vw" name="t_InchPos" type="CVector"/>
+    <attributes xmi:id="_OwSpkVNrEeyxW60CFQm-vw" name="t_fallPos" type="CVector"/>
+  </structs>
+  <structs xmi:id="_OwSpklNrEeyxW60CFQm-vw" name="DestroyInfo">
+    <attributes xmi:id="_OwSpk1NrEeyxW60CFQm-vw" name="d_tarId" type="int"/>
+    <attributes xmi:id="_OwSplFNrEeyxW60CFQm-vw" name="d_misId" type="int"/>
+    <attributes xmi:id="_OwSplVNrEeyxW60CFQm-vw" name="d_destroyTime" type="double"/>
+  </structs>
+  <structs xmi:id="_OwSpllNrEeyxW60CFQm-vw" name="RadarInfo">
+    <attributes xmi:id="_OwSpl1NrEeyxW60CFQm-vw" name="r_id" type="int"/>
+    <attributes xmi:id="_OwSpmFNrEeyxW60CFQm-vw" name="r_targets" type="List&lt;TarInfo>"/>
+  </structs>
+  <signalEvents xmi:id="_OwSpmVNrEeyxW60CFQm-vw" name="destroyInfo" port="_OwSpUVNrEeyxW60CFQm-vw" srcModel="_OwSpG1NrEeyxW60CFQm-vw" tarModel="_OwSpTVNrEeyxW60CFQm-vw">
+    <attribute xmi:id="_OwSpmlNrEeyxW60CFQm-vw" name="e_destroyInfo" type="DestroyInfo"/>
+  </signalEvents>
+</adevs:System>

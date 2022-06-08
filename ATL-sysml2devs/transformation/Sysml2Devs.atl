@@ -1,0 +1,851 @@
+-- @path devs=/ATL-Sysml2Devs/metamodel/target/adevs.ecore
+-- @nsURI sysml=http://www.eclipse.org/papyrus/sysml/1.6/SysML
+-- @nsURI uml=http://www.eclipse.org/uml2/5.0.0/UML
+
+module Sysml2Devs;
+create OUT : devs from INsysml : sysml, Inuml : uml;
+
+----------Date: 2021/11/28----------------------------------------------
+----------Author: Lixingchan--------------------------------------------
+
+------------------------------------------------------------------------
+---------------------------------Model2System---------------------------
+------------------------------------------------------------------------
+rule Model2DevsSystem{
+	from sysmlModel: uml!Model
+	using{
+		sysmlFlowPorts: Sequence(sysml!FlowPort) = sysml!FlowPort.allInstances();
+		sysmlValueTypes: Sequence(sysml!ValueType) = sysml!ValueType.allInstances();
+		sysmlValueTypeIsStruct: Sequence(sysml!ValueType) = sysmlValueTypes -> select(e | e.isStructDataType());
+		sysmlCoupleBlock: Sequence(sysml!Block) = thisModule.getAllCoupledBlock();
+		sysmlHybridBlock: Sequence(sysml!Block) = thisModule.getAllHybridBlock();
+		sysmlDiscret: Sequence(sysml!Block) = thisModule.getAllDiscretBlock();
+		sysmlAtomicBlock: Sequence(sysml!Block) = sysmlDiscret.union(sysmlHybridBlock);	
+
+		sysmlBlock : sysml!Block = sysmlAtomicBlock.first();
+		sysmlBaseClass : uml!Class = sysmlBlock.base_Class;
+		sysmlStatemachine: uml!StateMachine = sysmlBaseClass.getStateMachine();
+		sysmlStates: Sequence(uml!State) = sysmlBaseClass.getStates();
+		sysmlTransitions: Sequence(uml!Transition) = sysmlBaseClass.getAllTransitions();
+		sysmlTransitionsHasTrigger: Sequence(uml!Transition) = sysmlTransitions->select(t | t.hasTrigger());
+		sysmlTransitionsHasTimeTrigger: Sequence(uml!Transition) = sysmlTransitionsHasTrigger->select(t | t.trigger.at(1).event.hasTimeEvent());
+		sysmlTransitionsHasChangeTrigger: Sequence(uml!Transition) = sysmlTransitionsHasTrigger->select(t | t.trigger.at(1).event.hasChangeEvent());
+		sysmlTransitionsHasCallTrigger: Sequence(uml!Transition) = sysmlTransitionsHasTrigger->select(t | t.trigger.at(1).event.hasCallEvent());
+		sysmlTransitionsHasSignalTrigger: Sequence(uml!Transition) = sysmlTransitionsHasTrigger->select(t | t.trigger.at(1).event.hasSignalEvent());
+
+		devsFlowPorts : Sequence(devs!FlowPort) = sysmlFlowPorts -> collect(e | thisModule.sysmlFlowPort2devsFlowPort(e));
+		
+		devsStructs : Sequence(devs!Struct) = thisModule.getAllStructValueType(sysmlValueTypeIsStruct);
+		devsCoupled : Sequence(devs!Coupled) = sysmlCoupleBlock -> collect(e | thisModule.Block2CoupledModel(e, devsFlowPorts));	
+		devsHybrid : Sequence(devs!Hybrid) = sysmlHybridBlock -> collect(e | thisModule.Block2HybridModel(e, devsFlowPorts));	
+		devsDiscret : Sequence(devs!Discrete) = sysmlDiscret -> collect(e | thisModule.Block2DiscreteModel(e, devsFlowPorts));
+		devsConnectors: Sequence(devs!Connector) = OclUndefined;
+
+		devsBlocks : Sequence(devs!Devs) = devsCoupled.union(devsHybrid).union(devsDiscret);
+		devsAtomics : Sequence(devs!Atomic) = devsHybrid.union(devsDiscret);
+	}
+	to devsSystem: devs!System(
+		name <- sysmlModel.name,
+		models <- devsCoupled,
+		models <- devsHybrid,
+		models <- devsDiscret,
+		structs <- devsStructs
+	)
+	do{
+		---update devsCoupled model's connectors and components----
+		for(b in devsCoupled){
+			b.connectors <- b.getSysmlCoupledbyDevsCoupled().base_Class.ownedConnector -> collect(e | thisModule.sysmlConnector2devsConnector(e,devsFlowPorts));
+			b.components <- b.getSysmlCoupledbyDevsCoupled().getBlockAttributesOfCoupledBlock() -> collect(p | thisModule.getDevsBlockbyCoupledAttribute(p, devsBlocks));
+			if(devsConnectors = OclUndefined){
+				devsConnectors <- b.connectors;
+			}else{
+				devsConnectors <- devsConnectors.union( b.connectors);	
+			}
+		}
+		---update variables----
+		for(devsAtomic in devsAtomics){
+			if(devsAtomic.getSysmlBlockByDevsAtomic(sysmlAtomicBlock).base_Class.hasStateMachine()){
+				sysmlBlock <- devsAtomic.getSysmlBlockByDevsAtomic(sysmlAtomicBlock);
+				sysmlBaseClass <- sysmlBlock.base_Class;
+				sysmlStatemachine <- sysmlBaseClass.getStateMachine().first();
+				sysmlTransitions <- sysmlStatemachine.getTransitions();
+				sysmlTransitionsHasTrigger <- sysmlTransitions->select(t | t.trigger.size() > 0);
+				sysmlTransitionsHasSignalTrigger <- sysmlTransitionsHasTrigger->select(t | t.trigger.at(1).event.oclIsTypeOf(uml!SignalEvent));
+				---ExternalTransition----
+				for(t in sysmlTransitionsHasSignalTrigger){
+					thisModule.sysmlTransition2ExternalTransition(
+						sysmlBlock, 
+						devsSystem,
+						devsAtomic, 
+						t, 
+						devsAtomic.states,
+						devsAtomic.ports,
+						devsConnectors);
+				}
+			}
+		}
+	}
+}
+
+helper context devs!Atomic def: getTransitionWithSignalEventByDevsAtomic(sysmlAtomicBlock: Sequence(sysml!Block)) : Sequence(uml!Transition) =  
+	self.getSysmlBlockByDevsAtomic(sysmlAtomicBlock).base_Class.getAllTransitions();
+
+helper context devs!Atomic def: getSysmlBlockByDevsAtomic(sysmlAtomicBlock: Sequence(sysml!Block)) : sysml!Block =  
+	sysmlAtomicBlock->select(b | b.base_Class.name = self.name).first();
+
+helper def: getAllConnector() : Sequence(uml!Connector) =  
+	uml!Connector.allInstances()->select(e | not e.isBindingConnector());
+
+------------------------------------------------------------------------
+---------------------------------BDD------------------------------------
+------------------------------------------------------------------------
+
+---------------------------Coupled--------------------------------------
+lazy rule Block2CoupledModel{
+	from sysmlBlock: sysml!Block, devsflowPorts : Sequence(sysml!FlowPort)
+	using{
+		sysmlBaseClass: uml!Class = sysmlBlock.base_Class;
+		sysmlBaseClassAttributes: Sequence(uml!Property) = sysmlBaseClass.getAttributes();
+		sysmlBaseClassOperations: Sequence(uml!Operation) = sysmlBaseClass.getAllOperations();
+	
+		sysmlFlowPorts: Sequence(sysml!FlowPort) = sysml!FlowPort.allInstances();	
+		sysmlBlockAttributeIsPorts: Sequence(uml!Port) = sysmlBaseClass.attribute->select(e | e.isPortAttribute());	
+		
+		devsAttributes: Sequence(devs!Attribute) = sysmlBaseClassAttributes -> collect(e | thisModule.sysmlAttribute2devsAttribute(e));
+		devsOperations: Sequence(devs!Operation) = sysmlBaseClassOperations -> collect(e | thisModule.sysmlOperation2devsOperation(e));
+		devsPorts : Sequence(devs!FlowPort) = thisModule.getFlowPorts(sysmlFlowPorts, sysmlBlockAttributeIsPorts) -> collect(e | thisModule.getDevsFlowPortOfSysmlFlowPort(devsflowPorts, e));
+	}
+	to devsCoupledModel: devs!Coupled(
+		name <- sysmlBaseClass.name,
+		attributes <- devsAttributes,
+		operations <- devsOperations
+	)
+	do{
+		----update devsPort's owner------
+		for(p in devsPorts){
+			p.owner <- devsCoupledModel;
+		}
+		----update devsCoupledModel's ports------
+		devsCoupledModel.ports <- devsPorts;
+	}
+}
+---------------------------Discrete------------------------------------------
+lazy rule Block2DiscreteModel{
+	from sysmlBlock: sysml!Block, devsflowPorts : Sequence(sysml!FlowPort)
+	using{
+		sysmlBaseClass: uml!Class = sysmlBlock.base_Class;
+		sysmlBaseClassAttributes: Sequence(uml!Property) = sysmlBaseClass.getAttributes();
+		sysmlBaseClassOperations: Sequence(uml!Operation) = sysmlBaseClass.getAllOperations();
+
+		sysmlFlowPorts: Sequence(sysml!FlowPort) = sysml!FlowPort.allInstances();	
+		sysmlBlockAttributeIsPorts: Sequence(uml!Port) = sysmlBaseClass.attribute->select(e | e.isPortAttribute());	
+		sysmlFlowPortsOfTheBlock: Sequence(sysml!FlowPort) = thisModule.getFlowPorts(sysmlFlowPorts, sysmlBlockAttributeIsPorts);
+
+		sysmlStatemachine: uml!StateMachine = sysmlBaseClass.getStateMachine();
+		sysmlStates: Sequence(uml!State) = sysmlBaseClass.getStates();
+		sysmlTransitions: Sequence(uml!Transition) = sysmlBaseClass.getAllTransitions();
+		sysmlTransitionsHasTrigger: Sequence(uml!Transition) = sysmlTransitions->select(t | t.hasTrigger());
+		sysmlTransitionsHasTimeTrigger: Sequence(uml!Transition) = sysmlTransitionsHasTrigger->select(t | t.trigger.at(1).event.hasTimeEvent());
+		sysmlTransitionsHasChangeTrigger: Sequence(uml!Transition) = sysmlTransitionsHasTrigger->select(t | t.trigger.at(1).event.hasChangeEvent());
+		sysmlTransitionsHasCallTrigger: Sequence(uml!Transition) = sysmlTransitionsHasTrigger->select(t | t.trigger.at(1).event.hasCallEvent());
+		sysmlTransitionsHasSignalTrigger: Sequence(uml!Transition) = sysmlTransitionsHasTrigger->select(t | t.trigger.at(1).event.hasSignalEvent());
+
+		devsPorts : Sequence(devs!FlowPort) = sysmlFlowPortsOfTheBlock -> collect(e | thisModule.getDevsFlowPortOfSysmlFlowPort(devsflowPorts, e));
+		devsStates: Sequence(devs!State) = sysmlStates -> collect(e | thisModule.sysmlState2devsState(e));
+		devsAttributes: Sequence(devs!Attribute) = sysmlBaseClassAttributes -> collect(e | thisModule.sysmlAttribute2devsAttribute(e));
+		devsOperations: Sequence(devs!Operation) = sysmlBaseClassOperations -> collect(e | thisModule.sysmlOperation2devsOperation(e));
+	}
+	to devsDiscreteModel: devs!Discrete(
+		name <- sysmlBaseClass.name,
+		attributes <- devsAttributes,
+		operations <- devsOperations,
+		states <- devsStates
+	)
+	do{
+		---ports---
+		for(p in devsPorts){ p.owner <- devsDiscreteModel; }
+		devsDiscreteModel.ports <- devsPorts;
+		---internalTransitions from state's do activity----
+		for(s in sysmlStates){
+			if(not s.doActivity.oclIsUndefined()){
+				thisModule.sysmlStateDo2InterTransition(s, s.getDevsStateBySysmlState(devsStates), devsDiscreteModel);
+			}
+		}
+		---update variables----
+		if(sysmlBaseClass.hasStateMachine()){
+			sysmlStatemachine <- sysmlBaseClass.getStateMachine().first();
+			sysmlTransitions <- sysmlStatemachine.getTransitions();
+			sysmlTransitionsHasTrigger <- sysmlTransitions->select(t | t.trigger.size() > 0);
+			sysmlTransitionsHasTimeTrigger <- sysmlTransitionsHasTrigger->select(t | t.trigger.at(1).event.oclIsTypeOf(uml!TimeEvent));
+			sysmlTransitionsHasChangeTrigger <- sysmlTransitionsHasTrigger->select(t | t.trigger.at(1).event.oclIsTypeOf(uml!ChangeEvent));
+			sysmlTransitionsHasCallTrigger <- sysmlTransitionsHasTrigger->select(t | t.trigger.at(1).event.oclIsTypeOf(uml!CallEvent));
+			sysmlTransitionsHasSignalTrigger <- sysmlTransitionsHasTrigger->select(t | t.trigger.at(1).event.oclIsTypeOf(uml!SignalEvent));
+		}
+		---internalTransitions from transition with change event----
+		for(t in sysmlTransitionsHasChangeTrigger){
+			thisModule.sysmlTransition2InterTransition(sysmlBlock, devsDiscreteModel, t, devsStates );
+		}
+		---internalTransitions from transition with time event----
+		for(t in sysmlTransitionsHasTimeTrigger){
+			thisModule.sysmlTransition2InterTransition(sysmlBlock, devsDiscreteModel, t, devsStates );
+		}	
+	}	
+}
+
+helper context uml!Transition def: hasTrigger() : Boolean = 
+	self.trigger.size() > 0;
+
+helper context uml!Trigger def: hasSignalEvent() : Boolean = 
+	self.event.oclIsTypeOf(uml!SignalEvent);
+
+helper context uml!Trigger def: hasCallEvent() : Boolean = 
+	self.event.oclIsTypeOf(uml!CallEvent);
+
+helper context uml!Trigger def: hasTimeEvent() : Boolean = 
+	self.event.oclIsTypeOf(uml!TimeEvent);
+
+helper context uml!Trigger def: hasChangeEvent() : Boolean = 
+	self.event.oclIsTypeOf(uml!ChangeEvent);
+---------------------------Hybrid------------------------------------------
+lazy rule Block2HybridModel{
+	from sysmlBlock: sysml!Block,  devsflowPorts : Sequence(sysml!FlowPort)
+	using{
+		sysmlBaseClass : uml!Class = sysmlBlock.base_Class;
+		sysmlBaseClassAttributes : Sequence(uml!Property) = sysmlBaseClass.attribute;
+		sysmlBaseClassOperations : Sequence(uml!Operation) = sysmlBaseClass.getAllOperations();
+		
+		sysmlEquations : Sequence(uml!Property) = sysmlBaseClassAttributes->select(e | e.isConstraintAttribute());
+
+		sysmlBlockFlowPorts : Sequence(sysml!FlowPort) = sysml!FlowPort.allInstances();	
+		sysmlBlockAttributeIsPorts : Sequence(uml!Port) = sysmlBaseClassAttributes->select(e | e.isPortAttribute());	
+		sysmlFlowPortsOfTheBlock: Sequence(sysml!FlowPort) = thisModule.getFlowPorts(sysmlBlockFlowPorts, sysmlBlockAttributeIsPorts);
+
+		sysmlStatemachine: uml!StateMachine = sysmlBaseClass.getStateMachine();
+		sysmlStates : Sequence(uml!State) = sysmlBaseClass.getStates();
+		sysmlTransitions: Sequence(uml!Transition) = sysmlBaseClass.getAllTransitions();
+		sysmlTransitionsHasTrigger: Sequence(uml!Transition) = sysmlTransitions->select(t | t.trigger.size() > 0);
+		sysmlTransitionsHasTimeTrigger: Sequence(uml!Transition) = sysmlTransitionsHasTrigger->select(t | t.trigger.at(1).event.oclIsTypeOf(uml!TimeEvent));
+		sysmlTransitionsHasChangeTrigger: Sequence(uml!Transition) = sysmlTransitionsHasTrigger->select(t | t.trigger.at(1).event.oclIsTypeOf(uml!ChangeEvent));
+		sysmlTransitionsHasCallTrigger: Sequence(uml!Transition) = sysmlTransitionsHasTrigger->select(t | t.trigger.at(1).event.oclIsTypeOf(uml!CallEvent));
+		sysmlTransitionsHasSignalTrigger: Sequence(uml!Transition) = sysmlTransitionsHasTrigger->select(t | t.trigger.at(1).event.oclIsTypeOf(uml!SignalEvent));
+
+		devsPorts : Sequence(devs!FlowPort) = sysmlFlowPortsOfTheBlock -> collect(e | thisModule.getDevsFlowPortOfSysmlFlowPort(devsflowPorts, e));
+		devsAttributes: Sequence(devs!Attribute) =  sysmlBaseClassAttributes -> collect(e | thisModule.sysmlAttribute2devsAttribute(e));
+		devsOperations: Sequence(devs!Operation) = sysmlBaseClassOperations -> collect(e | thisModule.sysmlOperation2devsOperation(e));
+		devsStates: Sequence(devs!State) = sysmlStates -> collect(e | thisModule.sysmlState2devsState(e));
+	}
+	to devsHybridModel: devs!Hybrid(
+		name <- sysmlBaseClass.name,
+		attributes <- devsAttributes,
+		operations <- devsOperations,
+		states <- devsStates
+	)
+	do{
+		---equations---
+		for(e in sysmlEquations){
+			devsHybridModel.equation <- thisModule.generateHybridEquation(sysmlBlock, e, devsAttributes);
+		}
+		---ports---
+		for(p in devsPorts){ p.owner <- devsHybridModel; }
+		devsHybridModel.ports <- devsPorts;
+		---internalTransitions from state's do activity----
+		for(s in sysmlStates){
+			if(not s.doActivity.oclIsUndefined()){
+				thisModule.sysmlStateDo2InterTransition(s, s.getDevsStateBySysmlState(devsStates), devsHybridModel);
+			}
+		}
+		---update variables----
+		if(sysmlBaseClass.hasStateMachine()){
+			sysmlStatemachine <- sysmlBaseClass.getStateMachine().first();
+			sysmlTransitions <- sysmlStatemachine.getTransitions();
+			sysmlTransitionsHasTrigger <- sysmlTransitions->select(t | t.trigger.size() > 0);
+			sysmlTransitionsHasTimeTrigger <- sysmlTransitionsHasTrigger->select(t | t.trigger.at(1).event.oclIsTypeOf(uml!TimeEvent));
+			sysmlTransitionsHasChangeTrigger <- sysmlTransitionsHasTrigger->select(t | t.trigger.at(1).event.oclIsTypeOf(uml!ChangeEvent));
+			sysmlTransitionsHasCallTrigger <- sysmlTransitionsHasTrigger->select(t | t.trigger.at(1).event.oclIsTypeOf(uml!CallEvent));
+			sysmlTransitionsHasSignalTrigger <- sysmlTransitionsHasTrigger->select(t | t.trigger.at(1).event.oclIsTypeOf(uml!SignalEvent));
+		}
+		---internalTransitions from transition with change event----
+		for(t in sysmlTransitionsHasChangeTrigger){
+			thisModule.sysmlTransition2InterTransition(sysmlBlock, devsHybridModel, t, devsStates );
+		}
+		---internalTransitions from transition with time event----
+		for(t in sysmlTransitionsHasTimeTrigger){
+			thisModule.sysmlTransition2InterTransition(sysmlBlock, devsHybridModel, t, devsStates );
+		}	
+	}
+}
+------------------------------------------------------------------------
+---------------------------------operation------------------------------
+------------------------------------------------------------------------
+lazy rule sysmlOperation2devsOperation{
+	from 
+		sysmlOperation: uml!Operation
+	to devsOperation: devs!Operation(
+		name <- sysmlOperation.name,
+		returnType <- sysmlOperation.getReturnTypeOfOperation(),
+		body <- sysmlOperation.getMethodBody(),
+		parameters <- sysmlOperation.getParametersOfOperation() -> collect(e | thisModule.sysmlParameter2devsParameter(e))
+	)
+}
+---------------Parameter------------------
+lazy rule sysmlParameter2devsParameter{
+	from 
+		sysmlParameter: uml!Parameter
+	to devs_attribute: devs!Parameter(
+		name <- sysmlParameter.name,
+		type <- if(sysmlParameter.type <> OclUndefined) 
+				then
+					sysmlParameter.type.name
+				else OclUndefined
+				endif
+	)
+}
+------------------------------------------------------------------------
+---------------------------------Struct---------------------------------
+------------------------------------------------------------------------
+lazy rule ValueType2Struct {
+	from sysmlValueType: sysml!ValueType(
+		sysmlValueType.isStructDataType()
+	)
+	using{
+		valueTypeAttributes : Sequence(uml!Property) = sysmlValueType.base_DataType.attribute->asOrderedSet();
+	}
+	to devsStruct: devs!Struct(
+		name <- sysmlValueType.base_DataType.name,
+		attributes <- valueTypeAttributes -> collect(e | thisModule.sysmlAttribute2devsAttribute(e))
+	)
+}
+------------------------------------------------------------------------
+---------------------------------Equation&PAR-------------------------------
+------------------------------------------------------------------------
+lazy rule ConstraintBlock2Equation {
+	from sysmlConstraintBlock: sysml!ConstraintBlock
+	using {
+		blockAttributes : Sequence(uml!Property) = sysmlConstraintBlock.base_Class.attribute->asOrderedSet();
+	}
+	to devsEquation: devs!Equation(
+		name <- sysmlConstraintBlock.base_Class.name,
+		ownedAttributes <- blockAttributes -> collect(e | thisModule.sysmlAttribute2devsAttribute(e,devsEquation)),
+		body <- thisModule.getConstraintBodyByLanguage(sysmlConstraintBlock.base_Class.ownedRule.at(1), 'C')
+	)
+}
+------------------------------------------------------------------------
+---------------------------------IBD------------------------------------
+------------------------------------------------------------------------
+
+--------------------flowport---------------------
+lazy rule sysmlFlowPort2devsFlowPort{
+	from 
+		sysmlFlowPort: sysml!FlowPort
+	to devsFlowPort: devs!FlowPort(
+		direction <- sysmlFlowPort.direction.toString(),
+		name <- sysmlFlowPort.base_Port.name,
+		type <- sysmlFlowPort.base_Port.type.name
+	)
+}
+------------------Connector------------------------
+lazy rule sysmlConnector2devsConnector{
+	from ibdConnector: uml!Connector,flowPorts : Sequence(devs!FlowPort)
+		(
+			not ibdConnector.isBindingConnector()
+		)
+	using {
+		srcEnd : uml!ConnectorEnd = ibdConnector.end.at(1);
+		tarEnd : uml!ConnectorEnd = ibdConnector.end.at(2);
+		}
+	to devsConnector: devs!Connector(
+		srcObjectName <- if(srcEnd.partWithPort.oclIsUndefined()) 
+				then
+					'this'
+				else srcEnd.partWithPort.name
+				endif,
+		tarObjectName <- if(tarEnd.partWithPort.oclIsUndefined()) 
+				then
+					'this'
+				else tarEnd.partWithPort.name
+				endif,
+		srcClassName  <- if(srcEnd.partWithPort.oclIsUndefined()) 
+				then
+					ibdConnector.owner.name
+				else srcEnd.partWithPort.type.name
+				endif,
+		tarClassName  <- if(tarEnd.partWithPort.oclIsUndefined()) 
+				then
+					ibdConnector.owner.name
+				else tarEnd.partWithPort.type.name
+				endif,
+		srcPort <- thisModule.getDevsFlowPortsByConnectorEnd(flowPorts, srcEnd),
+		tarPort <- thisModule.getDevsFlowPortsByConnectorEnd(flowPorts, tarEnd)
+	)
+}
+------------------------------------------------------------------------
+---------------------------------IBD&PAR------------------------------------
+------------------------------------------------------------------------
+lazy rule generateHybridEquation {
+	from 
+		sysmlBlock: sysml!Block,
+		sysmlEquation: uml!Property,
+		hybridAttributes: Sequence(devs!Attribute)
+	using{
+		index: Integer = 1;
+		sysmlEquationBlock: sysml!ConstraintBlock = sysmlEquation.type.getConstraintBlcokByClass();
+		originBody: String = thisModule.getConstraintBodyByLanguage(sysmlEquationBlock.base_Class.ownedRule.at(1), 'C');
+		regex: String = 
+			'(?<=\\+)|(?<=-)|(?<=/)|(?<=\\*)|(?<==)|(?<=\\()|(?<=\\))|(?<=;)|(?<=,)|(?<= )|(?=\\+)|(?=-)|(?=/)|(?=\\*)|(?==)|(?=\\()|(?=\\))|(?=;)|(?=,)|(?= )';
+		originBodyList: Sequence(String) = originBody.splitSysmlEquationBody(regex);
+		newBody: String = '';
+		referenecAttributes: Sequence(devs!Attribute) = thisModule.getReferenecAttributesOfHybridEquation(sysmlBlock,sysmlEquationBlock,hybridAttributes);
+		bindingConnectors : Sequence(sysml!BindingConnector) = thisModule.getBindConnectorOfHybridEquation(sysmlBlock,sysmlEquationBlock);
+	}
+	to devsEquation: devs!Equation(
+		name <- sysmlEquation.name,
+		stateVars <- referenecAttributes
+	)
+	do{
+		---update devsEquation's body---
+		for(b in originBodyList){
+			if(b.isPropertyOfEquation(sysmlEquationBlock)){
+				newBody<-newBody.concat(b.getBindAttributeOfProperty(bindingConnectors));
+			}else{
+				newBody<-newBody.concat(b);
+			}
+		}
+		devsEquation.body<-newBody;
+	}
+}
+---------------Attribute------------------
+lazy rule sysmlAttribute2devsAttribute{
+	from 
+		sysmlAttribute: uml!Property
+	to devs_attribute: devs!Attribute(
+		name <- sysmlAttribute.name,
+		isStatic <- if(sysmlAttribute.isStatic <> OclUndefined) 
+				then
+					sysmlAttribute.isStatic
+				else OclUndefined
+				endif,
+		value <- if(sysmlAttribute.defaultValue <> OclUndefined) 
+				then
+					sysmlAttribute.defaultValue.name
+				else OclUndefined
+				endif, 
+		type <- if(sysmlAttribute.type <> OclUndefined) 
+				then
+					sysmlAttribute.type.name
+				else OclUndefined
+				endif,
+		multiplicity <- if(sysmlAttribute.lowerValue <> OclUndefined) 
+				then
+					sysmlAttribute.lowerValue.value.toString()
+				else OclUndefined
+				endif
+	)
+}
+------------------------------------------------------------------------
+---------------------------------STM------------------------------------
+------------------------------------------------------------------------
+
+--------------------Transition2ExternalTransition-----------------------
+lazy rule sysmlTransition2ExternalTransition{
+	from 
+		sysmlBlock: sysml!Block,
+		devsSystem: devs!System,
+		devsBlock: devs!Block,
+		sysmlTransition: uml!Transition,
+		devsStates : Sequence(devs!State),
+		devsPorts : Sequence(devs!FlowPort),
+		devsConnectors: Sequence(devs!Connector)
+	using{
+		srcState: uml!State = sysmlTransition.source;
+		tarState: uml!State = sysmlTransition.target;
+		sysmlSignalEvent: uml!SignalEvent =	sysmlTransition.trigger.at(1).event;
+
+		devsInputEvent: devs!SignalEvent = thisModule.sysmlSignalEvent2DevsSignalEvent(devsSystem, devsBlock, sysmlSignalEvent, devsPorts, devsConnectors);
+	}
+	to externalTransition: devs!ExternalTransition(
+		 name <- if(sysmlTransition.name <> OclUndefined) 
+				then
+					sysmlTransition.name
+				else OclUndefined
+				endif,
+		effect <- if(sysmlTransition.effect <> OclUndefined) 
+				then
+					thisModule.getMethodBodyByLanguage(sysmlTransition.effect, 'C')
+				else 
+					OclUndefined
+				endif,
+		srcState <- thisModule.getDevsStateBySysmlState(devsStates, srcState),
+		tarState <- thisModule.getDevsStateBySysmlState(devsStates, tarState),
+		inputEvent <- devsInputEvent
+	)
+	do{
+		---update devsBlock's externalTransitions---
+		devsBlock.externalTransitions <- externalTransition;
+		---update devsSystem's signalEvents---
+		devsSystem.signalEvents <- devsInputEvent;
+	}
+}
+-------------------------SignalEvent--------------------------
+lazy rule sysmlSignalEvent2DevsSignalEvent{
+	from 
+		devsSystem: devs!System,
+		devsTarBlock: devs!Block,
+		sysmlChangeEvent: uml!SignalEvent,
+		devsPorts : Sequence(devs!FlowPort),
+		devsConnectors: Sequence(devs!Connector)
+	using{
+		signal : uml!Signal = sysmlChangeEvent.signal;
+		signalAttribute : uml!Property =  signal.attribute.first();
+		signalAttributePort : uml!Port = signalAttribute.type;
+
+		devsAttribute : devs!Attribute = thisModule.sysmlAttribute2devsAttribute(signalAttribute);
+		devsTarPort: devs!FlowPort = thisModule.getDevsFlowPortOfUmlPort(devsPorts, signalAttributePort, devsTarBlock);
+		devsOriginConnector: devs!Connector = thisModule.getOriginConnectorOfDevsTarPort(devsTarPort, devsConnectors);
+		devsOriginConnectorSrcPort: devs!FlowPort = devsOriginConnector.srcPort;
+		devsSrcModel: devs!Atomic = devsOriginConnectorSrcPort.owner;
+		}
+	to devsSignalEvent: devs!SignalEvent(
+		name <- signal.name,
+		attribute <- devsAttribute,
+		tarModel <- devsTarBlock,
+		port <- devsTarPort,
+		srcModel <- devsSrcModel
+	),
+		outputFunction : devs!OutputFunction(
+			events <- devsSignalEvent
+	)
+	do {
+		---update devsSrcModel's outputFunc---
+		devsSrcModel.outputFunc <- 	outputFunction;
+	}
+	
+}
+
+helper def: getOriginConnectorOfDevsTarPort(devsTarPort: devs!FlowPort, devsConnectors: Sequence(devs!Connector)) : devs!Connector =  
+	if thisModule.getDirectConnectorOfDevsTarPort(devsTarPort, devsConnectors).srcPort.isTarPortOfConnector(devsConnectors) = false then
+		thisModule.getDirectConnectorOfDevsTarPort(devsTarPort, devsConnectors)
+	else
+		thisModule.getOriginConnectorOfDevsTarPort(thisModule.getDirectConnectorOfDevsTarPort(devsTarPort, devsConnectors).srcPort, devsConnectors)
+	endif;
+
+helper def: getDirectConnectorOfDevsTarPort(devsTarPort: devs!FlowPort, devsConnectors: Sequence(devs!Connector)) : devs!Connector =  
+	devsConnectors->select(c | c.tarPort = devsTarPort and c.tarPort.type = devsTarPort.type).first();
+
+helper context devs!FlowPort def: isTarPortOfConnector(devsConnectors: Sequence(devs!Connector)) : Boolean =  
+	devsConnectors->exists(c | c.tarPort = self and c.tarPort.type = self.type);
+
+
+helper def: getDevsFlowPortOfUmlPort(devsflowPorts : Sequence(devs!FlowPort), port : uml!Port, devsOwnedBlock: devs!Block) : devs!FlowPort =  
+	devsflowPorts->select(e | e.type = port.name and e.owner = devsOwnedBlock).first();
+
+-------------------Transition2InterTransition---------------------------
+lazy rule sysmlTransition2InterTransition{
+	from 
+		sysmlBlock: sysml!Block,
+		devsBlock: sysml!Block,
+		sysmlTransition: uml!Transition,
+		devsStates : Sequence(devs!State)
+	using{
+		srcState: uml!State = sysmlTransition.source;
+		tarState: uml!State = sysmlTransition.target;
+	}
+	to internalTransition: devs!InternalTransition(
+		 name <- if(sysmlTransition.name <> OclUndefined) 
+				then
+					sysmlTransition.name
+				else OclUndefined
+				endif,
+		effect <- if(sysmlTransition.effect <> OclUndefined) 
+				then
+					thisModule.getMethodBodyByLanguage(sysmlTransition.effect, 'C')
+				else 
+					OclUndefined
+				endif,
+		srcState <- thisModule.getDevsStateBySysmlState(devsStates, srcState),
+		tarState <- thisModule.getDevsStateBySysmlState(devsStates, tarState),
+		guard <- if(sysmlTransition.guard <> OclUndefined) 
+				then
+					thisModule.getEventsBodyByLanguage(sysmlTransition.guard.specification, 'C')
+				else 
+					OclUndefined
+				endif
+	)
+	do{
+		---update internalTransition's triggerEvent---
+		if(sysmlTransition.trigger.at(1).event.oclIsTypeOf(uml!ChangeEvent)){
+			internalTransition.triggerEvent <- thisModule.sysmlChangeEvent2ChangeEvent(sysmlTransition.trigger.at(1).event);
+		}
+		if(sysmlTransition.trigger.at(1).event.oclIsTypeOf(uml!TimeEvent)){
+			internalTransition.triggerEvent <- thisModule.sysmlTimeEvent2TimeEvent(sysmlTransition.trigger.at(1).event);
+		}
+		---update devsBlock's internalTransitions---
+		devsBlock.internalTransitions<-internalTransition;
+	}
+}
+
+helper def: getDevsStateBySysmlState(devsStates : Sequence(devs!State), sysmlState : uml!State) : devs!State = 
+	devsStates -> select(e | e.name = sysmlState.name).at(1);
+-------------------------ChangeEvent--------------------------
+lazy rule sysmlChangeEvent2ChangeEvent{
+	from 
+		sysmlChangeEvent: uml!ChangeEvent
+	using{
+		body: String = 	thisModule.getEventsBodyByLanguage(sysmlChangeEvent.changeExpression, 'C');
+		}
+	to devsChangeEvent: devs!ChangeEvent(
+		name <- sysmlChangeEvent.name,
+		expression <- body
+	)
+}
+------------------------TimeEvent------------------------------
+lazy rule sysmlTimeEvent2TimeEvent{
+	from 
+		sysmlTimeEvent: uml!TimeEvent
+	to devsTimeEvent: devs!TimeEvent(
+		name <- sysmlTimeEvent.name,
+		isRelative <- sysmlTimeEvent.isRelative,
+		value <- thisModule.getEventsBodyByLanguage(sysmlTimeEvent.when.expr, 'C')
+	)
+}
+
+---------------------------------State2State------------------------------------
+lazy rule sysmlState2devsState{
+	from 
+		sysmlState: uml!State
+	to devsState: devs!State(
+		name <- sysmlState.name
+	)
+}
+---------------------------------StateDoActivity2InterTransition----------------------------
+lazy rule sysmlStateDo2InterTransition{
+	from 
+		sysmlState: uml!State, 
+		devsState: uml!State, 
+		devsBlock: sysml!Block
+	using{
+		doActivity: uml!Behavior = sysmlState.doActivity;
+		}
+	to internalTransition: devs!InternalTransition(
+		name <- doActivity.name,
+		srcState <- devsState,
+		tarState <- devsState,
+		effect <- thisModule.getMethodBodyByLanguage(doActivity, 'C')
+	)
+	do{
+		---update devsBlock's internalTransitions---
+		devsBlock.internalTransitions<-internalTransition;	
+	}
+}
+
+helper def: getEventsBodyByLanguage(valueSpecification:uml!ValueSpecification, language: String): String = 
+	valueSpecification.body->at(thisModule.getMethodIndex(valueSpecification, language, 1));
+
+helper def: getMethodIndex1(valueSpecification: uml!ValueSpecification, language: String, index:Integer): Integer = 
+	if valueSpecification.language->at(index).toString() = language then
+		index 
+	else
+		thisModule.getConstraintIndex(valueSpecification, index + 1)
+	endif;
+------------------------------------------------------------------------
+--------------------------------helper----------------------------------
+------------------------------------------------------------------------
+helper def: getDevsBlockbyCoupledAttribute(constraintProperty: uml!Property, devsBlocks: Sequence(devs!Devs)) : devs!Devs = 
+	devsBlocks->select(e | e.name = constraintProperty.type.name).at(1);
+
+helper context sysml!Block def: getBlockAttributesOfCoupledBlock() : Sequence(uml!Property) = 
+	self.base_Class.attribute->select(s | s.isBlockAttribute() and s.isCompositeAttribute());
+
+helper context devs!Coupled def: getSysmlCoupledbyDevsCoupled() : sysml!ConstraintBlock = 
+	if thisModule.getAllCoupledBlock()->select(e | e.base_Class.name = self.name).size() = 0 then
+		OclUndefined
+	else
+		thisModule.getAllCoupledBlock()->select(e | e.base_Class.name = self.name).at(1)
+	endif;
+
+helper def: getAllCoupledBlock() : Sequence(sysml!Block) = 
+	sysml!Block.allInstances()->select(
+	e | e.isBlockStereotyped() and
+	not e.isConstraintBlockStereotyped() and 
+	e.isCoupledBlock()
+);
+
+helper def: getAllHybridBlock() : Sequence(sysml!Block) = 
+	sysml!Block.allInstances()->select(e | e.isBlockStereotyped() and
+	not e.isConstraintBlockStereotyped() and 
+	not e.isCoupledBlock() and
+	e.isHybridBlock()
+	);
+
+helper def: getAllDiscretBlock() : Sequence(sysml!Block) = 
+	sysml!Block.allInstances()->select(e | e.isBlockStereotyped() and
+	not e.isConstraintBlockStereotyped() and 
+	not e.isCoupledBlock() and
+	not e.isHybridBlock()
+	);
+
+helper def: getConstraintIndex(constraint: uml!Constraint, language: String, index:Integer): Integer = 
+	if constraint.specification.language->at(index).toString() = language then
+		index 
+	else
+		thisModule.getConstraintIndex(constraint, index + 1)
+	endif;
+
+helper def: getConstraintBodyByLanguage(constraint:uml!Constraint, language: String): String = 
+	constraint.specification.body->at(thisModule.getConstraintIndex(constraint, language, 1));
+
+helper context sysml!Block def: isBlockStereotyped() : Boolean = 
+	self.base_Class.getAppliedStereotypes()->exists(s | s.qualifiedName = 'SysML::Blocks::Block');
+
+helper context sysml!Block def: isConstraintBlockStereotyped() : Boolean = 
+	self.base_Class.getAppliedStereotypes()->exists(s | s.qualifiedName = 'SysML::ConstraintBlocks::ConstraintBlock');
+
+helper context sysml!Block def: isCoupledBlock() : Boolean = 
+	self.base_Class.attribute->exists(s | s.isBlockAttribute() and s.isCompositeAttribute());
+
+helper context sysml!Block def: isHybridBlock() : Boolean = 
+	self.base_Class.attribute->exists(a | a.isConstraintAttribute());
+
+helper context uml!Property def: isConstraintAttribute() : Boolean = 
+	self.type.getApplicableStereotypes()->exists(s | s.qualifiedName = 'SysML::ConstraintBlocks::ConstraintBlock');
+
+helper context uml!Property def: isBlockAttribute() : Boolean = 
+	self.type.getApplicableStereotypes()->exists(s | s.qualifiedName = 'SysML::Blocks::Block');
+
+helper context uml!Property def: isCompositeAttribute() : Boolean = 
+	self.aggregation.toString() = 'composite';
+
+helper context sysml!ValueType def: isStructDataType() : Boolean = 
+	self.base_DataType.attribute.size()>0;
+
+helper context uml!Operation def: getParametersOfOperation() : Sequence(uml!Parameter) = 
+	self.ownedParameter->select(e | e.direction.toString()='in');
+
+helper context uml!Operation def: getMethodBody() : String = 
+	if self.method.size() = 0 then
+		OclUndefined
+	else
+		thisModule.getMethodBodyByLanguage(self.method.at(1), 'C')
+	endif;
+
+helper context uml!Operation def: getReturnTypeOfOperation() : String = 
+	if self.ownedParameter->select(e | e.direction.toString()='return').size() = 0 then
+		OclUndefined
+	else
+		self.ownedParameter->select(e | e.direction.toString()='return').at(1).type.name
+	endif;
+
+helper def: getMethodIndex(method: uml!Behavior, language: String, index:Integer): Integer = 
+	if method.language->at(index).toString() = language then
+		index 
+	else
+		thisModule.getConstraintIndex(method, index + 1)
+	endif;
+
+helper def: getMethodBodyByLanguage(method:uml!Behavior, language: String): String = 
+	method.body->at(thisModule.getMethodIndex(method, language, 1));
+
+helper def: getBindConnectorOfHybridEquation(sysmlBlock: sysml!Block, sysmlEquation: sysml!ConstraintBlock) : Sequence(sysml!BindingConnector) =  
+	sysmlBlock.getBindConnectorOfHybrid()->select(b | b.isBindWithEquation(sysmlEquation)) ;
+
+helper context sysml!BindingConnector def: isBindWithEquation(sysmlEquation: sysml!ConstraintBlock) : Boolean=  
+	self.base_Connector.end->exists(e | e.role.owner = sysmlEquation.base_Class);
+
+helper context sysml!Block def: getBindConnectorOfHybrid() : Sequence(sysml!BindingConnector) =  
+	sysml!BindingConnector.allInstances() ->select(b | b.base_Connector.owner = self.base_Class);
+
+helper context sysml!ConstraintBlock def: getHybridRefAttrOfEquation(sysmlBlock: sysml!Block) : Sequence(devs!Attribute) = 
+	 self.base_Class.getAttributes()->exists(e | e.name = self);
+
+helper context String def: isPropertyOfEquation(equation: sysml!ConstraintBlock) : Boolean =  
+	 equation.base_Class.getAttributes()->exists(e | e.name = self);
+
+helper context String def: getBindAttributeOfProperty(bd: Sequence(sysml!BindingConnector)) : String =  
+	 bd -> select(b | self.isOneEndOfConnector(b.base_Connector)).at(1).base_Connector.getAnotherEndOfConnector(self);
+
+helper context String def: isOneEndOfConnectors(connectors: Sequence(uml!Connector)) : Boolean =  
+	connectors->exists(e | self.isOneEndOfConnector(e)) ;
+
+helper context String def: isOneEndOfConnector(connector: uml!Connector) : Boolean =  
+	 connector.end ->exists(e | e.role.name = self) ;
+
+helper context uml!Connector def: getAnotherEndOfConnector(oneEnd: String ) : String =  
+	 if self.end.at(1).role.name = oneEnd then
+	 	self.end.at(2).role.name
+	 else
+	 	self.end.at(1).role.name
+	endif;
+
+helper context String def: splitSysmlEquationBody(regex: String ) : Sequence(String) =  
+	self.split(regex);
+
+helper def: getReferenecAttributesOfHybridEquation(sysmlBlock: sysml!Block, sysmlEquation: sysml!ConstraintBlock, hybridAttributes: Sequence(devs!Attribute)) : Sequence(devs!Attribute) =  
+	hybridAttributes->select(h | h.name.isOneEndOfConnectors(
+		thisModule.getBindConnectorOfHybridEquation(sysmlBlock,sysmlEquation)->collect(e | e.base_Connector))) ;
+
+helper def: getEquationOfHybrid(equations : Sequence(devs!Equation), constraintBlock : sysml!ConstraintBlock) : Sequence(devs!Equation) =  
+	equations->select(e | e.name = constraintBlock.base_Class.name);
+
+helper context uml!Class def: getConstraintBlcokByClass() : sysml!ConstraintBlock = 
+	if sysml!ConstraintBlock.allInstances()->select(e | e.base_Class = self).size() = 0 then
+		OclUndefined
+	else
+		sysml!ConstraintBlock.allInstances()->select(e | e.base_Class = self).at(1)
+	endif;
+
+helper context uml!Class def: getAttributes():  Sequence(uml!Property)= 
+	self.getAllAttributes()->select(e |
+			not e.isConstraintAttribute() and 
+			not e.isPortAttribute() and
+			not e.isCompositeAttribute() and
+			not e.isBlockAttribute());
+
+helper context uml!BehavioralFeature def: getDevsOperationBySpecification( devsOperations: Sequence(devs!Operation)) : devs!Operation = 
+	devsOperations->select(e | e.name = self.name).at(1);
+
+helper def: getDevsFlowPortsByConnectorEnd(flowPorts : Sequence(devs!FlowPort), connectorEnd : uml!ConnectorEnd) : devs!FlowPort = 
+	flowPorts -> select(e | e.name = connectorEnd.role.name and e.owner.name = connectorEnd.role.owner.name).at(1);
+		
+helper def: getFlowPortsByConnectorEnd(connectorEnd : uml!ConnectorEnd) : sysml!FlowPort = 
+	thisModule.getAllFlowPorts() -> select(e | e.base_Port = connectorEnd.role).at(1);
+
+helper def: getAllFlowPorts() : Sequence(sysml!FlowPort) = 
+	sysml!FlowPort.allInstances()->asOrderedSet();
+
+helper def: getFlowPorts(flowPorts : Sequence(sysml!FlowPort), ports:Sequence(uml!Port)) : Sequence(sysml!FlowPort) = 
+	flowPorts -> select(f | ports->exists(e | e = f.base_Port));
+
+helper def: isPortOfABlock(block: sysml!Block, port : uml!Port): Boolean = 
+	block.base_Class.attribute->select(e | e.isPortAttribute())->exists(e | e = port);
+
+helper context uml!Property def: isPortAttribute() : Boolean = 
+	self.oclType().toString() = 'sysml!Port';
+
+helper context uml!Connector def: isBindingConnector() : Boolean = 
+	self.getAppliedStereotypes()->exists(s | s.qualifiedName = 'SysML::Blocks::BindingConnector');
+
+helper def: getDevsFlowPortOfSysmlFlowPort( devsflowPorts : Sequence(devs!FlowPort), port : sysml!FlowPort) :devs!FlowPort =  
+	devsflowPorts->select(e | e.name = port.base_Port.name and e.owner = OclUndefined).at(1);
+
+helper def: getAllStructValueType(sysmlValueTypeIsStruct: Sequence(sysml!ValueType) ) : Sequence(devs!Struct) = 
+	sysmlValueTypeIsStruct->collect(t | thisModule.ValueType2Struct(t));
+
+helper context uml!StateMachine def: getTransitions() : Sequence(uml!Transition) = 
+	self.region.first().getTransitionsOfRegion();
+ 
+helper context uml!Region def: getTransitionsOfRegion() : Sequence(uml!Transition) = 
+	self.transition;
+
+helper context uml!Class def: hasStateMachine() : Boolean = 
+	self.allOwnedElements()->exists(e | e.oclType().toString() = 'sysml!StateMachine');
+
+helper context uml!Class def: getStateMachine() : Sequence(uml!StateMachine) = 
+	self.allOwnedElements()->select(e | e.oclType().toString() = 'sysml!StateMachine');
+
+helper context uml!Class def: getStates() : Sequence(uml!State) = 
+	self.allOwnedElements()->select(e | e.oclType().toString() = 'sysml!State');
+
+helper context uml!State def: getDevsStateBySysmlState(devsStates: Sequence(devs!State)) : devs!State = 
+	devsStates->select(e | e.name = self.name).at(1);
+
+helper context uml!Class def: getAllTransitions() : Sequence(uml!Transition) = 
+	uml!Transition.allInstances()->select(t | t.owner = self);

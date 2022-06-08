@@ -1,0 +1,77 @@
+[comment encoding = UTF-8 /]
+[module generateHybridHeaderFile('http://www.devs/1.0.0/adevs')]
+
+
+[template public generateElementHybridHeaderFile(aHybrid : Hybrid)]
+[file (aHybrid.name+'.h', false, 'UTF-8')]
+#pragma once
+#ifndef [aHybrid.name.toUpperCase()/]_H
+#define [aHybrid.name.toUpperCase()/]_H
+#include "ExchangeData.h"
+#include "Vector.h"
+#include <iostream>
+using namespace std;
+using namespace adevs;
+class [aHybrid.name/] : public adevs::ode_system<IO_Type> {
+public:
+	[generatePort(aHybrid)/]	
+	[generateAttributes(aHybrid)/]	
+	private:
+	State              m_state;
+	ofstream           m_outFile;
+	list<ExchangeData> outEvents;
+public:
+	void init(double *q);
+	void der_func(const double* q, double* dq);
+	void state_event_func(const double* q, double *z);
+	double time_event_func(const double* q);
+	void external_event(double* q, double e, const Bag<IO_Type>& xb);
+	void internal_event(double* q, const bool* state_event);
+	void confluent_event(double* q, const bool* state_event, const Bag<IO_Type>& xb);
+	void output_func(const double *q, const bool* state_event, Bag<IO_Type>& yb);
+	void postStep(double* q);
+	void gc_output(Bag<IO_Type>&);
+	State getState() {return m_state; };
+	const char* getClassName() { return "[aHybrid.name.toUpperCase()/]"; };
+	[generateOperations(aHybrid)/]
+	~[aHybrid.name/]();
+
+};
+#endif
+[/file]
+[/template]
+[template public generateOperations(aHybrid : Hybrid) post (trim()) ]
+[for (aoperation : Operation | aHybrid.operations) ]
+[generateOperation(aoperation)/] 
+[/for]
+[/template]
+
+[template public generateOperation(aoperation : Operation) post (trim()) ]
+[if (aoperation.returnType.oclIsUndefined()._not())][aoperation.returnType/] [/if]
+[aoperation.name/]([generateParameters(aoperation)/]);
+[/template]
+
+[template public generateParameters(aoperation : Operation) post (trim())]
+[for (attribute : Parameter | aoperation.parameters) separator (',')] [attribute.type/] [attribute.name/][/for]
+[/template]
+
+[template public generatePort(aHybrid : Hybrid) post (trim()) ]
+[for (port: FlowPort | aHybrid.ports) ]
+static int [port.name/];
+[/for]
+[/template]
+[template public generateAttributes(aHybrid : Hybrid) post (trim()) ]
+[for (attribute: Attribute | aHybrid.attributes) ]
+[if(attribute.isStatic)]static [/if][attribute.type/] [attribute.name/][if(attribute.multiplicity.toInteger().oclIsInvalid()._not())]
+['['/][attribute.multiplicity/][']'/];
+[else];
+[/if]
+[/for]
+[/template]
+[template public generateConstructor(aHybrid : Hybrid) post (trim()) ]
+[for (aoperation : Operation | aHybrid.operations) ]
+	[if (aoperation.name.equalsIgnoreCase(aHybrid.name))]
+[generateOperation(aoperation)/]
+	[/if]
+[/for]
+[/template]
